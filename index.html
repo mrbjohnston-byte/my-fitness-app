@@ -40,7 +40,7 @@
             <div class="card">
                 <h2>🍽️ Nutrition (Day <span id="diet-day-num"></span>)</h2>
                 <span class="section-title">Breakfast:</span>
-                <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Pick: Yogurt/Berries, 3 Eggs/Spinach, or Whey Smoothie</p>
+                <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Yogurt/Walnuts, 3 Eggs/Spinach, or Whey Smoothie</p>
                 <span class="section-title">Lunch:</span>
                 <p id="lunch-text" style="margin: 5px 0; font-weight: 500;"></p>
                 <span class="section-title">Dinner:</span>
@@ -58,19 +58,19 @@
     <script>
         const workouts = {
             A: [
-                { name: "Sit-to-Stand (Chair Squat)", reps: "6-10", url: "https://www.youtube.com/watch?v=kQCXxXgza_s" },
-                { name: "Dumbbell Floor Press", reps: "6-10", url: "https://www.youtube.com/watch?v=T0Y3OBF1bNI" },
-                { name: "One-Arm Dumbbell Row", reps: "8-12", url: "https://www.youtube.com/watch?v=ZRSGpBUVcNw" },
-                { name: "Dumbbell Romanian Deadlift", reps: "6-10", url: "https://www.youtube.com/watch?v=hQgFixeXdZo" },
-                { name: "Standing Dumbbell Curl", reps: "8-12", url: "https://www.youtube.com/watch?v=av7-8igSXTs" },
-                { name: "Chair-Supported Calf Raises", reps: "10-15", url: "https://www.youtube.com/watch?v=7FlkNiSW1WA" }
+                { name: "Sit-to-Stand (Chair Squat)", reps: "6-10", id: "kQCXxXgza_s" },
+                { name: "Dumbbell Floor Press", reps: "6-10", id: "T0Y3OBF1bNI" },
+                { name: "One-Arm Dumbbell Row", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "Dumbbell Romanian Deadlift", reps: "6-10", id: "hQgFixeXdZo" },
+                { name: "Standing Dumbbell Curl", reps: "8-12", id: "av7-8igSXTs" },
+                { name: "Chair-Supported Calf Raises", reps: "10-15", id: "7FlkNiSW1WA" }
             ],
             B: [
-                { name: "Step-Back (Reverse) Lunge", reps: "6-8", url: "https://www.youtube.com/watch?v=l1IvDQibYLU" },
-                { name: "Seated DB Overhead Press", reps: "6-10", url: "https://www.youtube.com/watch?v=-Xa2xYhPl-0" },
-                { name: "Chest-Supported DB Row", reps: "8-12", url: "https://www.youtube.com/watch?v=ZRSGpBUVcNw" },
-                { name: "Glute Bridge", reps: "8-12", url: "https://www.youtube.com/watch?v=nuapk_-Q2BI" },
-                { name: "Farmer Carry", reps: "20-60s", url: "https://www.youtube.com/watch?v=7mzKcADa46c" }
+                { name: "Step-Back (Reverse) Lunge", reps: "6-8", id: "l1IvDQibYLU" },
+                { name: "Seated DB Overhead Press", reps: "6-10", id: "-Xa2xYhPl-0" },
+                { name: "Chest-Supported DB Row", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "Glute Bridge", reps: "8-12", id: "nuapk_-Q2BI" },
+                { name: "Farmer Carry", reps: "20-60s", id: "7mzKcADa46c" }
             ]
         };
         const dietRotation = [
@@ -115,12 +115,15 @@
             let html = "";
             if (workoutType === 'Rest') {
                 if ([2,4].includes(dayOfWeek)) {
-                    html = `<p><b>Recovery:</b> Chair Yoga + Walk.</p><a href="https://www.youtube.com/watch?v=3HNMPNuXinl" target="_blank" class="video-btn">Watch Tina (15m)</a><a href="https://www.youtube.com/watch?v=7yjPnhRbcV0" target="_blank" class="video-btn">Watch SarahBeth (20m)</a>`;
+                    html = `<p><b>Recovery:</b> Chair Yoga + Walk.</p>
+                            <a href="https://www.youtube.com/watch?v=3HNMPNuXinl" target="_blank" class="video-btn">Watch Tina (15m)</a>
+                            <a href="https://www.youtube.com/watch?v=7yjPnhRbcV0" target="_blank" class="video-btn">Watch SarahBeth (20m)</a>
+                            <a href="https://www.youtube.com/watch?v=-rBDxFKJtIE" target="_blank" class="video-btn">Watch SeniorShape (25m)</a>`;
                 } else { html = `<p><b>Active Recovery:</b> 20-45 min Walk.</p>`; }
             } else {
                 html = `<p style="margin-bottom:10px; color: #777;">Workout ${workoutType} (Phase ${Math.ceil(currentWeek/2)})</p>`;
                 workouts[workoutType].forEach(ex => {
-                    html += `<div style="margin-bottom:20px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b> (${ex.reps})<br><a href="${ex.url}" target="_blank" class="video-btn">Play Video</a></div>`;
+                    html += `<div style="margin-bottom:20px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b> (${ex.reps})<br><a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Watch Video</a></div>`;
                 });
             }
             document.getElementById('exercise-content').innerHTML = html;
