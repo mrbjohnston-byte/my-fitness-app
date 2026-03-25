@@ -40,18 +40,18 @@
             <div class="card">
                 <h2>🍽️ Nutrition (Day <span id="diet-day-num"></span>)</h2>
                 <span class="section-title">Breakfast:</span>
-                <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Yogurt/Walnuts, 3 Eggs/Spinach, or Whey Smoothie</p>
+                <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Pick: Yogurt/Walnuts, 3 Eggs/Spinach, or Whey Smoothie</p>
                 <span class="section-title">Lunch:</span>
                 <p id="lunch-text" style="margin: 5px 0; font-weight: 500;"></p>
                 <span class="section-title">Dinner:</span>
                 <p id="dinner-text" style="margin: 5px 0; font-weight: 500;"></p>
             </div>
             <div class="card">
-                <h2>💊 Supplements</h2>
-                <div class="check-item"><input type="checkbox"> <b>AM:</b> Aspirin (100mg), Candesartan, Multi, Omega-3</div>
+                <h2>💊 Daily Supplements</h2>
+                <div class="check-item"><input type="checkbox"> <b>Morning:</b> Aspirin (100mg), Candesartan, Multi, Omega-3</div>
                 <div class="check-item"><input type="checkbox"> <b>Lunch:</b> Creatine (3-5g)</div>
-                <div class="check-item"><input type="checkbox"> <b>Post:</b> Whey Protein (1 scoop)</div>
-                <div class="check-item"><input type="checkbox"> <b>PM:</b> Magnesium Glycinate</div>
+                <div class="check-item"><input type="checkbox"> <b>Post-Workout:</b> Whey Protein (1 scoop)</div>
+                <div class="check-item"><input type="checkbox"> <b>Evening:</b> Magnesium Glycinate</div>
             </div>
         </div>
     </div>
@@ -116,7 +116,7 @@
             if (workoutType === 'Rest') {
                 if ([2,4].includes(dayOfWeek)) {
                     html = `<p><b>Recovery Day:</b> Chair Yoga + Walk.</p>
-                            <a href="https://www.youtube.com/watch?v=3HNMPNuXinl" target="_blank" class="video-btn">Watch Yoga (15m)</a>`;
+                            <a href="https://www.youtube.com/watch?v=3HNMPNuXinl" target="_blank" class="video-btn">Watch Yoga Demo</a>`;
                 } else { html = `<p><b>Active Recovery:</b> 20-45 min Walk.</p>`; }
             } else {
                 html = `<p style="margin-bottom:10px; color: #777;">Workout ${workoutType} (Phase ${Math.ceil(currentWeek/2)})</p>`;
