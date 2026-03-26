@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#2c3e50">
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; --text: #333; }
-        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; padding-bottom: 40px; }
+        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; padding-bottom: 60px; }
         .card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         h1 { font-size: 1.2rem; margin: 0; color: var(--primary); }
         h2 { font-size: 1.1rem; border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-top: 0; }
@@ -17,10 +17,16 @@
         .nav-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 1.2rem; }
         .view-date-label { font-size: 0.9rem; font-weight: bold; text-align: center; flex-grow: 1; }
         .section-title { font-weight: bold; color: var(--accent); margin-top: 12px; display: block; font-size: 0.9rem; }
+        .recipe-link { color: #2980b9; font-weight: 500; text-decoration: underline; cursor: pointer; display: block; margin: 5px 0; font-size: 0.95rem; }
         .video-btn { display: inline-block; background: #e74c3c; color: white; padding: 14px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; margin-top: 8px; width: 100%; text-align: center; box-sizing: border-box; font-weight: bold; }
         .check-item { display: flex; align-items: center; margin: 10px 0; font-size: 0.9rem; line-height: 1.3; }
         input[type="checkbox"] { margin-right: 12px; min-width: 26px; min-height: 26px; }
-        .today-btn { width: 100%; background: #ddd; border: none; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #555; margin-top: 5px; }
+        .cheat-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        
+        /* Recipe Modal */
+        #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y: auto; padding: 20px 10px; box-sizing: border-box; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; max-width: 500px; margin: auto; }
+        .close-btn { background: #666; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -33,15 +39,11 @@
         </div>
         <button class="nav-btn" onclick="changeViewDate(1)">❯</button>
     </div>
-    <button class="today-btn" onclick="resetToToday()">Back to Today</button>
 
     <div id="app" style="margin-top:15px;">
         <div class="card">
             <h1 id="week-phase-header">Week 1 | Phase 1</h1>
-            <div class="setup-row" style="margin-top:10px; background: #eee; padding: 10px; border-radius: 8px;">
-                <label style="font-size: 0.8rem;"><b>Program Start Date:</b></label>
-                <input type="date" id="start-date-input" style="width:100%; padding:5px; margin-top:5px;" onchange="updateStartDate(this.value)">
-            </div>
+            <button class="cheat-btn" onclick="showCheatSheet()">Open Cooking Cheat Sheet</button>
         </div>
 
         <div class="card">
@@ -54,9 +56,9 @@
             <span class="section-title">Breakfast Picks:</span>
             <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Yogurt/Walnuts | 3 Eggs/Spinach | Whey Smoothie (1.5 scoops)</p>
             <span class="section-title">Lunch:</span>
-            <p id="lunch-text" style="margin: 5px 0; font-weight: 500;"></p>
+            <div id="lunch-display"></div>
             <span class="section-title">Dinner:</span>
-            <p id="dinner-text" style="margin: 5px 0; font-weight: 500;"></p>
+            <div id="dinner-display"></div>
         </div>
 
         <div class="card">
@@ -68,26 +70,51 @@
         </div>
     </div>
 
+    <div id="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body" style="font-size: 0.95rem; line-height: 1.5; color: #444;"></div>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
     <script>
         let viewingDate = new Date();
         viewingDate.setHours(0,0,0,0);
 
+        const recipes = {
+            "Lentil salad": "Toss 1.5 cups canned lentils (rinsed) with cucumber, tomatoes, 2 tbsp olive oil, lemon juice, salt, and pepper.",
+            "Sardines + quinoa + vegetables": "Heat quinoa, sauté vegetables in olive oil, add sardines or shrimp. Season with lemon and salt.",
+            "Chickpea bowl": "Mix 1.5 cups chickpeas with chopped vegetables, greens, olive oil, and lemon juice.",
+            "Chicken + broccoli + sweet potato": "Pan sear chicken breast or thighs, microwave sweet potato, steam broccoli. Use olive oil and salt.",
+            "Chicken salad": "Combine cooked chicken with greens, tomatoes, cucumber, olive oil, and vinegar.",
+            "Cod + greens + brown rice": "Pan sear fish (approx 6-8 oz), heat brown rice, wilt greens in pan with garlic and oil.",
+            "White bean soup": "Sauté garlic in olive oil, add white beans and broth, simmer for 10 minutes.",
+            "Turkey + mixed vegetables": "Brown ground turkey in a pan, add frozen mixed vegetables and sauté until tender.",
+            "Egg/sardine salad": "Chop 2 hard-boiled eggs, add 1 can sardines, olive oil, pepper, and lemon juice.",
+            "Trout or mackerel + asparagus": "Pan sear fish, sauté or roast asparagus with olive oil and salt.",
+            "Hummus & veg": "Serve hummus with raw vegetables (carrots, cucumber, peppers) and olives.",
+            "Lean beef + roasted vegetables": "Sear steak or lean beef in a pan; roast vegetables with olive oil at 400F until tender.",
+            "Leftovers": "Reheat and eat any previously prepared meal.",
+            "Plant-based lentil/bean stew": "Lentils or beans simmered with broth, garlic, and olive oil.",
+            "Greek salad w/ chickpeas": "Tomatoes, cucumber, chickpeas, feta cheese, olive oil, and lemon juice.",
+            "Skinless chicken thighs + vegetables": "Pan sear chicken thighs; sauté or steam your choice of seasonal vegetables.",
+            "Lentil soup": "Canned lentils + broth + garlic + olive oil (simmer 10-15 min).",
+            "Haddock/pollock + greens + potatoes": "Pan sear fish, microwave potatoes, sauté greens with garlic.",
+            "Sardines on whole-grain toast": "Sardines on whole grain toast with lemon juice and cracked pepper.",
+            "Turkey + zucchini + brown rice": "Sauté ground turkey and diced zucchini; serve over heated brown rice.",
+            "Bean & avocado salad": "Mixed beans tossed with diced avocado, olive oil, and lemon juice.",
+            "Mackerel + Brussels sprouts": "Pan sear mackerel; sauté or roast halved Brussels sprouts until charred.",
+            "Leftover fish salad": "Flake leftover cooked fish over a large bed of greens with olive oil and vinegar.",
+            "Pork tenderloin + vegetables": "Sear pork slices; sauté or roast mixed vegetables with olive oil.",
+            "Egg salad": "Chopped hard-boiled eggs with olive oil or yogurt, mustard, salt, and pepper.",
+            "Cod or tilapia + greens": "Simple pan sear of white fish; sauté greens (spinach/kale) with garlic.",
+            "Plant-based beans, lentils & vegetables": "Warm beans or lentils with olive oil and mixed vegetables."
+        };
+
         const workouts = {
-            A: [
-                { name: "Sit-to-Stand (Chair Squat)", reps: "6-10", id: "kQCXxXgza_s" },
-                { name: "Dumbbell Floor Press", reps: "6-10", id: "T0Y3OBF1bNI" },
-                { name: "One-Arm Dumbbell Row", reps: "8-12", id: "ZRSGpBUVcNw" },
-                { name: "Dumbbell Romanian Deadlift", reps: "6-10", id: "hQgFixeXdZo" },
-                { name: "Standing Dumbbell Curl", reps: "8-12", id: "av7-8igSXTs" },
-                { name: "Chair-Supported Calf Raises", reps: "10-15", id: "7FlkNiSW1WA" }
-            ],
-            B: [
-                { name: "Step-Back (Reverse) Lunge", reps: "6-8 per leg", id: "38xlLGfguz4" }, 
-                { name: "Seated DB Overhead Press", reps: "6-10", id: "-Xa2xYhPl-0" },
-                { name: "Chest-Supported DB Row", reps: "8-12", id: "ZRSGpBUVcNw" },
-                { name: "Glute Bridge", reps: "8-12", id: "nuapk_-Q2BI" },
-                { name: "Farmer Carry", reps: "20-60 sec", id: "7mzKcADa46c" }
-            ]
+            A: [{ name: "Sit-to-Stand (Chair Squat)", id: "kQCXxXgza_s" }, { name: "DB Floor Press", id: "T0Y3OBF1bNI" }, { name: "One-Arm DB Row", id: "ZRSGpBUVcNw" }, { name: "DB Romanian Deadlift", id: "hQgFixeXdZo" }, { name: "Standing DB Curl", id: "av7-8igSXTs" }, { name: "Calf Raises", id: "7FlkNiSW1WA" }],
+            B: [{ name: "Step-Back Lunge", id: "38xlLGfguz4" }, { name: "Seated DB Overhead Press", id: "-Xa2xYhPl-0" }, { name: "Chest-Supported DB Row", id: "ZRSGpBUVcNw" }, { name: "Glute Bridge", id: "nuapk_-Q2BI" }, { name: "Farmer Carry", id: "7mzKcADa46c" }]
         };
 
         const dietRotation = [
@@ -95,13 +122,13 @@
             { l: "Chickpea bowl", d: "Chicken + broccoli + sweet potato" },
             { l: "Chicken salad", d: "Cod + greens + brown rice" },
             { l: "White bean soup", d: "Turkey + mixed vegetables" },
-            { l: "Egg/sardine salad", d: "Trout or mackerel + asparagus + quinoa" },
+            { l: "Egg/sardine salad", d: "Trout or mackerel + asparagus" },
             { l: "Hummus & veg", d: "Lean beef + roasted vegetables" },
             { l: "Leftovers", d: "Plant-based lentil/bean stew" },
             { l: "Greek salad w/ chickpeas", d: "Skinless chicken thighs + vegetables" },
             { l: "Lentil soup", d: "Haddock/pollock + greens + potatoes" },
             { l: "Sardines on whole-grain toast", d: "Turkey + zucchini + brown rice" },
-            { l: "Bean & avocado salad", d: "Mackerel + Brussels sprouts + quinoa" },
+            { l: "Bean & avocado salad", d: "Mackerel + Brussels sprouts" },
             { l: "Leftover fish salad", d: "Pork tenderloin + vegetables" },
             { l: "Egg salad", d: "Cod or tilapia + greens" },
             { l: "Soup/leftovers", d: "Plant-based beans, lentils & vegetables" }
@@ -109,11 +136,8 @@
 
         function init() {
             let start = localStorage.getItem('startDate') || "2026-03-30";
-            document.getElementById('start-date-input').value = start;
             const startDate = new Date(start + "T00:00:00");
-            
-            const diffTime = viewingDate - startDate;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor((viewingDate - startDate) / (1000 * 60 * 60 * 24));
             
             document.getElementById('display-date-str').innerText = viewingDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -127,9 +151,11 @@
             }
 
             const dietIndex = ((diffDays % 14) + 14) % 14; 
+            const lunch = dietRotation[dietIndex].l;
+            const dinner = dietRotation[dietIndex].d;
             document.getElementById('diet-day-num').innerText = dietIndex + 1;
-            document.getElementById('lunch-text').innerText = dietRotation[dietIndex].l;
-            document.getElementById('dinner-text').innerText = dietRotation[dietIndex].d;
+            document.getElementById('lunch-display').innerHTML = `<span class="recipe-link" onclick="openRecipe('${lunch}')">${lunch}</span>`;
+            document.getElementById('dinner-display').innerHTML = `<span class="recipe-link" onclick="openRecipe('${dinner}')">${dinner}</span>`;
 
             const dayOfWeek = viewingDate.getDay(); 
             const weekNum = Math.floor(diffDays / 7) + 1;
@@ -138,37 +164,49 @@
             let html = "";
             if (workoutType === 'Rest') {
                 if ([2,4,6].includes(dayOfWeek)) {
-                    html = `<p><b>Mobility:</b> Choose a Yoga session.</p>
-                            <a href="https://www.youtube.com/watch?v=3HNMPNuXlnI" target="_blank" class="video-btn">Tina - 15m (Corrected)</a>
-                            <a href="https://www.youtube.com/watch?v=7yjPnhRbcV0" target="_blank" class="video-btn">SarahBeth - 20m (Verified)</a>
-                            <a href="https://www.youtube.com/watch?v=-rBDxFKJtlE" target="_blank" class="video-btn">SeniorShape - 25m (Corrected)</a>
-                            <a href="https://www.aarp.org/videos/health/fitness/6148434772001/" target="_blank" class="video-btn" style="background:#004b87;">AARP Chair Yoga - 15m</a>`;
+                    html = `<p><b>Mobility:</b> Choose a Yoga session.</p><a href="https://www.youtube.com/watch?v=7yjPnhRbcV0" target="_blank" class="video-btn">Watch Yoga Demo</a>`;
                 } else { html = `<p><b>Active Recovery:</b> 20-45 min Walk.</p>`; }
             } else {
-                html = `<p style="margin-bottom:10px; color: #777;">Workout ${workoutType}</p>`;
                 workouts[workoutType].forEach(ex => {
-                    html += `<div style="margin-bottom:25px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b> (${ex.reps})<br><a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Watch Video</a></div>`;
+                    html += `<div style="margin-bottom:20px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b><br><a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Form Video</a></div>`;
                 });
             }
             document.getElementById('exercise-content').innerHTML = html;
         }
 
-        function changeViewDate(days) {
-            viewingDate.setDate(viewingDate.getDate() + days);
-            init();
+        function openRecipe(name) {
+            document.getElementById('modal-title').innerText = name;
+            document.getElementById('modal-body').innerText = recipes[name] || "Instructions for this meal are found in the Swappable Proteins guide.";
+            document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        function resetToToday() {
-            viewingDate = new Date();
-            viewingDate.setHours(0,0,0,0);
-            init();
+        function showCheatSheet() {
+            document.getElementById('modal-title').innerText = "Cooking Cheat Sheet";
+            document.getElementById('modal-body').innerHTML = `
+                <p><b>Swappable Proteins (Use Interchangeably):</b></p>
+                <ul>
+                    <li><b>Lean:</b> Chicken breast/thighs, turkey, eggs, shrimp, cod, haddock, tilapia </li>
+                    <li><b>Fatty (2-3x/week):</b> Sardines, mackerel, trout [cite: 7, 40]</li>
+                    <li><b>Plant:</b> Lentils, chickpeas, white beans [cite: 8, 41]</li>
+                </ul>
+                <p><b>Shrimp Quick Guide:</b></p>
+                <ul>
+                    <li><b>Portion:</b> 6-8 oz cooked [cite: 32, 55]</li>
+                    <li><b>Cook:</b> 2-3 min per side [cite: 33, 56]</li>
+                    <li><b>Flavor:</b> Olive oil + garlic + lemon [cite: 34, 57]</li>
+                </ul>
+                <p><b>Flavor Shortcuts:</b></p>
+                <ul>
+                    <li>Olive oil + lemon + salt [cite: 60]</li>
+                    <li>Garlic + olive oil [cite: 61]</li>
+                    <li>Mustard + vinegar [cite: 62]</li>
+                </ul>`;
+            document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        function updateStartDate(val) {
-            localStorage.setItem('startDate', val);
-            init();
-        }
-
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        function changeViewDate(days) { viewingDate.setDate(viewingDate.getDate() + days); init(); }
+        function resetToToday() { viewingDate = new Date(); viewingDate.setHours(0,0,0,0); init(); }
         init();
     </script>
 </body>
