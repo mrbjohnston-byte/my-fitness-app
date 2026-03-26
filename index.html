@@ -28,4 +28,148 @@
     <div class="nav-bar">
         <button class="nav-btn" onclick="changeViewDate(-1)">❮</button>
         <div class="view-date-label">
-            <span id="display-date-str"></span><br
+            <span id="display-date-str"></span><br>
+            <small id="program-day-label" style="color:var(--accent)"></small>
+        </div>
+        <button class="nav-btn" onclick="changeViewDate(1)">❯</button>
+    </div>
+    <button class="today-btn" onclick="resetToToday()">Back to Today</button>
+
+    <div id="app" style="margin-top:15px;">
+        <div class="card">
+            <h1 id="week-phase-header">Week 1 | Phase 1</h1>
+            <div class="setup-row" style="margin-top:10px; background: #eee; padding: 10px; border-radius: 8px;">
+                <label style="font-size: 0.8rem;"><b>Program Start Date:</b></label>
+                <input type="date" id="start-date-input" style="width:100%; padding:5px; margin-top:5px;" onchange="updateStartDate(this.value)">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🏋️ Exercise Plan</h2>
+            <div id="exercise-content"></div>
+        </div>
+
+        <div class="card">
+            <h2>🍽️ Nutrition (Day <span id="diet-day-num"></span>)</h2>
+            <span class="section-title">Breakfast Picks:</span>
+            <p style="font-size: 0.85rem; margin: 5px 0; color: #555;">Yogurt/Walnuts | 3 Eggs/Spinach | Whey Smoothie (1.5 scoops)</p>
+            <span class="section-title">Lunch:</span>
+            <p id="lunch-text" style="margin: 5px 0; font-weight: 500;"></p>
+            <span class="section-title">Dinner:</span>
+            <p id="dinner-text" style="margin: 5px 0; font-weight: 500;"></p>
+        </div>
+
+        <div class="card">
+            <h2>💊 Daily Supplements</h2>
+            <div class="check-item"><input type="checkbox"> <b>Morning:</b> Aspirin (100mg), Candesartan, Multi, Omega-3</div>
+            <div class="check-item"><input type="checkbox"> <b>Lunch:</b> Creatine (3-5g)</div>
+            <div class="check-item"><input type="checkbox"> <b>Post:</b> Whey Protein (1 scoop)</div>
+            <div class="check-item"><input type="checkbox"> <b>Evening:</b> Magnesium Glycinate</div>
+        </div>
+    </div>
+
+    <script>
+        let viewingDate = new Date();
+        viewingDate.setHours(0,0,0,0);
+
+        const workouts = {
+            A: [
+                { name: "Sit-to-Stand (Chair Squat)", reps: "6-10", id: "kQCXxXgza_s" },
+                { name: "Dumbbell Floor Press", reps: "6-10", id: "T0Y3OBF1bNI" },
+                { name: "One-Arm Dumbbell Row", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "Dumbbell Romanian Deadlift", reps: "6-10", id: "hQgFixeXdZo" },
+                { name: "Standing Dumbbell Curl", reps: "8-12", id: "av7-8igSXTs" },
+                { name: "Chair-Supported Calf Raises", reps: "10-15", id: "7FlkNiSW1WA" }
+            ],
+            B: [
+                { name: "Step-Back (Reverse) Lunge", reps: "6-8 per leg", id: "38xlLGfguz4" }, 
+                { name: "Seated DB Overhead Press", reps: "6-10", id: "-Xa2xYhPl-0" },
+                { name: "Chest-Supported DB Row", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "Glute Bridge", reps: "8-12", id: "nuapk_-Q2BI" },
+                { name: "Farmer Carry", reps: "20-60 sec", id: "7mzKcADa46c" }
+            ]
+        };
+
+        const dietRotation = [
+            { l: "Lentil salad", d: "Sardines + quinoa + vegetables" },
+            { l: "Chickpea bowl", d: "Chicken + broccoli + sweet potato" },
+            { l: "Chicken salad", d: "Cod + greens + brown rice" },
+            { l: "White bean soup", d: "Turkey + mixed vegetables" },
+            { l: "Egg/sardine salad", d: "Trout or mackerel + asparagus + quinoa" },
+            { l: "Hummus & veg", d: "Lean beef + roasted vegetables" },
+            { l: "Leftovers", d: "Plant-based lentil/bean stew" },
+            { l: "Greek salad w/ chickpeas", d: "Skinless chicken thighs + vegetables" },
+            { l: "Lentil soup", d: "Haddock/pollock + greens + potatoes" },
+            { l: "Sardines on whole-grain toast", d: "Turkey + zucchini + brown rice" },
+            { l: "Bean & avocado salad", d: "Mackerel + Brussels sprouts + quinoa" },
+            { l: "Leftover fish salad", d: "Pork tenderloin + vegetables" },
+            { l: "Egg salad", d: "Cod or tilapia + greens" },
+            { l: "Soup/leftovers", d: "Plant-based beans, lentils & vegetables" }
+        ];
+
+        function init() {
+            let start = localStorage.getItem('startDate') || "2026-03-30";
+            document.getElementById('start-date-input').value = start;
+            const startDate = new Date(start + "T00:00:00");
+            
+            const diffTime = viewingDate - startDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('display-date-str').innerText = viewingDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+            if (diffDays < 0) {
+                document.getElementById('program-day-label').innerText = "Pre-Program Mode";
+                document.getElementById('week-phase-header').innerText = "Preparation";
+            } else {
+                const currentWeek = Math.floor(diffDays / 7) + 1;
+                document.getElementById('program-day-label').innerText = `Day ${diffDays + 1} of 84`;
+                document.getElementById('week-phase-header').innerText = `Week ${currentWeek} | Phase ${Math.ceil(currentWeek/2)}`;
+            }
+
+            const dietIndex = ((diffDays % 14) + 14) % 14; 
+            document.getElementById('diet-day-num').innerText = dietIndex + 1;
+            document.getElementById('lunch-text').innerText = dietRotation[dietIndex].l;
+            document.getElementById('dinner-text').innerText = dietRotation[dietIndex].d;
+
+            const dayOfWeek = viewingDate.getDay(); 
+            const weekNum = Math.floor(diffDays / 7) + 1;
+            let workoutType = (weekNum % 2 !== 0) ? ([1,3,5].includes(dayOfWeek) ? (dayOfWeek === 3 ? 'B' : 'A') : 'Rest') : ([1,3,5].includes(dayOfWeek) ? (dayOfWeek === 3 ? 'A' : 'B') : 'Rest');
+            
+            let html = "";
+            if (workoutType === 'Rest') {
+                if ([2,4,6].includes(dayOfWeek)) {
+                    html = `<p><b>Mobility:</b> Choose a Yoga session.</p>
+                            <a href="https://www.youtube.com/watch?v=3HNMPNuXlnI" target="_blank" class="video-btn">Tina - 15m (Corrected)</a>
+                            <a href="https://www.youtube.com/watch?v=7yjPnhRbcV0" target="_blank" class="video-btn">SarahBeth - 20m (Verified)</a>
+                            <a href="https://www.youtube.com/watch?v=-rBDxFKJtlE" target="_blank" class="video-btn">SeniorShape - 25m (Corrected)</a>
+                            <a href="https://www.aarp.org/videos/health/fitness/6148434772001/" target="_blank" class="video-btn" style="background:#004b87;">AARP Chair Yoga - 15m</a>`;
+                } else { html = `<p><b>Active Recovery:</b> 20-45 min Walk.</p>`; }
+            } else {
+                html = `<p style="margin-bottom:10px; color: #777;">Workout ${workoutType}</p>`;
+                workouts[workoutType].forEach(ex => {
+                    html += `<div style="margin-bottom:25px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b> (${ex.reps})<br><a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Watch Video</a></div>`;
+                });
+            }
+            document.getElementById('exercise-content').innerHTML = html;
+        }
+
+        function changeViewDate(days) {
+            viewingDate.setDate(viewingDate.getDate() + days);
+            init();
+        }
+
+        function resetToToday() {
+            viewingDate = new Date();
+            viewingDate.setHours(0,0,0,0);
+            init();
+        }
+
+        function updateStartDate(val) {
+            localStorage.setItem('startDate', val);
+            init();
+        }
+
+        init();
+    </script>
+</body>
+</html>
