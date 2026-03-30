@@ -22,8 +22,8 @@
         .check-item { display: flex; align-items: center; margin: 10px 0; font-size: 0.9rem; line-height: 1.3; }
         input[type="checkbox"] { margin-right: 12px; min-width: 26px; min-height: 26px; }
         .cheat-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        .sets-reps { background: #f0f3f2; color: #2c3e50; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-top: 4px; }
         
-        /* Recipe Modal */
         #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y: auto; padding: 20px 10px; box-sizing: border-box; }
         .modal-content { background: white; padding: 20px; border-radius: 15px; max-width: 500px; margin: auto; }
         .close-btn { background: #666; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; margin-top: 20px; font-weight: bold; }
@@ -113,8 +113,21 @@
         };
 
         const workouts = {
-            A: [{ name: "Sit-to-Stand (Chair Squat)", id: "kQCXxXgza_s" }, { name: "DB Floor Press", id: "T0Y3OBF1bNI" }, { name: "One-Arm DB Row", id: "ZRSGpBUVcNw" }, { name: "DB Romanian Deadlift", id: "hQgFixeXdZo" }, { name: "Standing DB Curl", id: "av7-8igSXTs" }, { name: "Calf Raises", id: "7FlkNiSW1WA" }],
-            B: [{ name: "Step-Back Lunge", id: "38xlLGfguz4" }, { name: "Seated DB Overhead Press", id: "-Xa2xYhPl-0" }, { name: "Chest-Supported DB Row", id: "ZRSGpBUVcNw" }, { name: "Glute Bridge", id: "nuapk_-Q2BI" }, { name: "Farmer Carry", id: "7mzKcADa46c" }]
+            A: [
+                { name: "Sit-to-Stand (Chair Squat)", sets: "2-3", reps: "6-10", id: "kQCXxXgza_s" },
+                { name: "DB Floor Press", sets: "2-3", reps: "6-10", id: "T0Y3OBF1bNI" },
+                { name: "One-Arm DB Row", sets: "2-3", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "DB Romanian Deadlift", sets: "2-3", reps: "6-10", id: "hQgFixeXdZo" },
+                { name: "Standing DB Curl", sets: "2-3", reps: "8-12", id: "av7-8igSXTs" },
+                { name: "Calf Raises", sets: "2-3", reps: "10-15", id: "7FlkNiSW1WA" }
+            ],
+            B: [
+                { name: "Step-Back Lunge", sets: "2-3", reps: "6-8 per leg", id: "38xlLGfguz4" },
+                { name: "Seated DB Overhead Press", sets: "2-3", reps: "6-10", id: "-Xa2xYhPl-0" },
+                { name: "Chest-Supported DB Row", sets: "2-3", reps: "8-12", id: "ZRSGpBUVcNw" },
+                { name: "Glute Bridge", sets: "2-3", reps: "8-12", id: "nuapk_-Q2BI" },
+                { name: "Farmer Carry", sets: "2-3", reps: "20-60 sec", id: "7mzKcADa46c" }
+            ]
         };
 
         const dietRotation = [
@@ -168,7 +181,11 @@
                 } else { html = `<p><b>Active Recovery:</b> 20-45 min Walk.</p>`; }
             } else {
                 workouts[workoutType].forEach(ex => {
-                    html += `<div style="margin-bottom:20px; border-left: 5px solid var(--accent); padding-left:15px;"><b>${ex.name}</b><br><a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Form Video</a></div>`;
+                    html += `<div style="margin-bottom:20px; border-left: 5px solid var(--accent); padding-left:15px;">
+                                <b>${ex.name}</b><br>
+                                <span class="sets-reps">${ex.sets} Sets x ${ex.reps}</span><br>
+                                <a href="https://www.youtube.com/watch?v=${ex.id}" target="_blank" class="video-btn">Form Video</a>
+                             </div>`;
                 });
             }
             document.getElementById('exercise-content').innerHTML = html;
@@ -183,31 +200,12 @@
         function showCheatSheet() {
             document.getElementById('modal-title').innerText = "Cooking Cheat Sheet";
             document.getElementById('modal-body').innerHTML = `
-                <p><b>Swappable Proteins (Use Interchangeably):</b></p>
+                <p><b>Swappable Proteins:</b></p>
                 <ul>
-                    <li><b>Lean:</b> Chicken breast/thighs, turkey, eggs, shrimp, cod, haddock, tilapia </li>
-                    <li><b>Fatty (2-3x/week):</b> Sardines, mackerel, trout [cite: 7, 40]</li>
-                    <li><b>Plant:</b> Lentils, chickpeas, white beans [cite: 8, 41]</li>
+                    <li><b>Lean:</b> Chicken, turkey, eggs, shrimp, cod, tilapia</li>
+                    <li><b>Fatty:</b> Sardines, mackerel, trout (2-3x/week)</li>
+                    <li><b>Plant:</b> Lentils, chickpeas, white beans</li>
                 </ul>
-                <p><b>Shrimp Quick Guide:</b></p>
+                <p><b>Quick Tips:</b></p>
                 <ul>
-                    <li><b>Portion:</b> 6-8 oz cooked [cite: 32, 55]</li>
-                    <li><b>Cook:</b> 2-3 min per side [cite: 33, 56]</li>
-                    <li><b>Flavor:</b> Olive oil + garlic + lemon [cite: 34, 57]</li>
-                </ul>
-                <p><b>Flavor Shortcuts:</b></p>
-                <ul>
-                    <li>Olive oil + lemon + salt [cite: 60]</li>
-                    <li>Garlic + olive oil [cite: 61]</li>
-                    <li>Mustard + vinegar [cite: 62]</li>
-                </ul>`;
-            document.getElementById('modal-overlay').style.display = 'block';
-        }
-
-        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-        function changeViewDate(days) { viewingDate.setDate(viewingDate.getDate() + days); init(); }
-        function resetToToday() { viewingDate = new Date(); viewingDate.setHours(0,0,0,0); init(); }
-        init();
-    </script>
-</body>
-</html>
+                    <li>
