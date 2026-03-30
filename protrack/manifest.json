@@ -2,7 +2,7 @@
   "id": "/protrack-beta",
   "name": "ProTrack Protein",
   "short_name": "ProTrack",
-  "start_url": "./index.html",
+  "start_url": "index.html?v=2",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#e67e22",
