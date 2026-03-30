@@ -56,33 +56,49 @@
     }
 
     async function lookupFood() {
-        const query = document.getElementById('magic-input').value;
-        const btn = document.getElementById('search-btn');
-        if (!query) return;
+    const query = document.getElementById('magic-input').value;
+    const btn = document.getElementById('search-btn');
+    if (!query) return;
 
-        btn.innerText = "Searching...";
-        
-        try {
-            const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${query}`, {
-                headers: { 'X-Api-Key': API_KEY }
-            });
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                // Sum up protein if multiple items found (e.g. "2 eggs and toast")
-                pendingProtein = data.reduce((sum, item) => sum + item.protein_g, 0);
-                pendingName = query;
-                
-                document.getElementById('found-text').innerHTML = `<b>Found:</b> ${query}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g`;
-                document.getElementById('result-info').style.display = 'block';
-            } else {
-                alert("Couldn't find that food. Try being more specific!");
+    btn.innerText = "Searching...";
+    document.getElementById('result-info').style.display = 'none';
+    
+    // URL encode the query (essential for things like "1 cup yogurt")
+    const encodedQuery = encodeURIComponent(query);
+    
+    try {
+        const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${encodedQuery}`, {
+            method: 'GET',
+            headers: { 
+                'X-Api-Key': API_KEY,
+                'Content-Type': 'application/json'
             }
-        } catch (e) {
-            alert("Error connecting to database.");
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server responded with ${response.status}: ${errorText}`);
         }
+
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            pendingProtein = data.reduce((sum, item) => sum + item.protein_g, 0);
+            pendingName = data[0].name; // Use the official name found
+            
+            document.getElementById('found-text').innerHTML = 
+                `<b>Found:</b> ${pendingName}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g`;
+            document.getElementById('result-info').style.display = 'block';
+        } else {
+            alert("Food not found. Try '1 cup yogurt' or '100g chicken'.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Connection Error: " + e.message);
+    } finally {
         btn.innerText = "Identify & Add";
     }
+}
 
     function confirmAdd() {
         total += pendingProtein;
