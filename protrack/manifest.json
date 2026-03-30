@@ -1,8 +1,9 @@
 {
-  "id": "/protrack-beta",
+  "id": "protrack-protein-unique-id",
   "name": "ProTrack Protein",
   "short_name": "ProTrack",
-  "start_url": "index.html?v=2",
+  "start_url": "index.html",
+  "scope": "/my-fitness-app/protrack/",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#e67e22",
