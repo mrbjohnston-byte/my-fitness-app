@@ -3,131 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack Beta 1.2</title>
+    <title>ProTrack Auto</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root { --pixel-blue: #4285F4; --pixel-orange: #e67e22; --bg: #f8f9fa; }
+        :root { --pixel-blue: #4285F4; --bg: #f8f9fa; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h2, h3 { margin: 0 0 10px 0; color: #333; }
-        .protein-main { font-size: 2.5rem; font-weight: bold; color: var(--pixel-blue); }
-        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        input, select { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .btn-add { background: var(--pixel-blue); color: white; }
-        .btn-save { background: var(--pixel-orange); color: white; margin-top: 10px; }
-        .vault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .vault-btn { background: #eee; padding: 10px; border-radius: 8px; border: none; font-size: 0.9rem; }
-        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .protein-main { font-size: 3rem; font-weight: bold; color: var(--pixel-blue); text-align: center; }
+        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 1.1rem; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-magic { background: var(--pixel-blue); color: white; }
+        .result-box { background: #e8f0fe; padding: 10px; border-radius: 10px; margin-top: 10px; display: none; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Daily Protein</h2>
     <div class="protein-main" id="total-display">0g</div>
-    <p>Target: 160g</p>
+    <p style="text-align:center; color: #666;">Daily Protein Goal: 160g</p>
 </div>
 
 <div class="card">
-    <h3>Log Food</h3>
-    <input type="text" id="food-name" placeholder="Food Name (e.g. Yogurt)" style="margin-bottom:10px;">
-    <div class="input-row">
-        <input type="number" id="amount" placeholder="Amount">
-        <select id="unit">
-            <option value="g">Grams</option>
-            <option value="oz">Ounces</option>
-            <option value="cup">Cups</option>
-        </select>
+    <h3>Magic Entry</h3>
+    <input type="text" id="magic-input" placeholder="e.g. 1 cup yogurt or 2 eggs">
+    <button class="btn btn-magic" id="search-btn" onclick="lookupFood()">Identify & Add</button>
+    
+    <div id="result-info" class="result-box">
+        <p id="found-text"></p>
+        <button class="btn" style="background:#34A853; color:white;" onclick="confirmAdd()">Confirm + Add</button>
     </div>
-    <input type="number" id="density" placeholder="Protein per 100g (or per cup)">
-    <button class="btn btn-add" onclick="processEntry()">Add to Day</button>
-    <button class="btn btn-save" onclick="saveToVault()">Save to Vault</button>
 </div>
 
 <div class="card">
-    <h3>The Vault</h3>
-    <div id="vault-list" class="vault-grid"></div>
-</div>
-
-<div class="card">
-    <h3>Today's History</h3>
+    <h3>History</h3>
     <div id="history-log"></div>
-    <button class="btn" style="background:#ddd; color:#555; margin-top:15px;" onclick="resetDay()">Reset Everything</button>
+    <button class="btn" style="background:#eee; color:#555;" onclick="resetDay()">Reset Day</button>
 </div>
 
 <script>
+    const API_KEY = 'VVGfHRUrjjfjVdLz9VymkXukK8YX204p6zLhlqhN'; // PASTE YOUR KEY HERE
     let total = parseFloat(localStorage.getItem('pro_total')) || 0;
-    let vault = JSON.parse(localStorage.getItem('pro_vault')) || [
-        {name: "Meatloaf", amount: 1, unit: "slice", density: 30.4},
-        {name: "Greek Yogurt", amount: 1, unit: "cup", density: 17}
-    ];
     let history = JSON.parse(localStorage.getItem('pro_history')) || [];
+    let pendingProtein = 0;
+    let pendingName = "";
 
     function updateUI() {
         document.getElementById('total-display').innerText = total.toFixed(1) + 'g';
         localStorage.setItem('pro_total', total);
         localStorage.setItem('pro_history', JSON.stringify(history));
-        localStorage.setItem('pro_vault', JSON.stringify(vault));
-        renderVault();
         renderHistory();
     }
 
-    function processEntry() {
-        const name = document.getElementById('food-name').value || "Unknown Food";
-        const amt = parseFloat(document.getElementById('amount').value);
-        const unit = document.getElementById('unit').value;
-        const dens = parseFloat(document.getElementById('density').value);
+    async function lookupFood() {
+        const query = document.getElementById('magic-input').value;
+        const btn = document.getElementById('search-btn');
+        if (!query) return;
+
+        btn.innerText = "Searching...";
         
-        let p = 0;
-        if (unit === "g") p = (amt * dens) / 100;
-        else if (unit === "oz") p = (amt * 28.35 * dens) / 100;
-        else if (unit === "cup") p = amt * dens; // For cups, we assume 'dens' is protein per cup
-
-        if (!isNaN(p)) {
-            total += p;
-            history.unshift({name, protein: p.toFixed(1), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})});
-            updateUI();
+        try {
+            const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${query}`, {
+                headers: { 'X-Api-Key': API_KEY }
+            });
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                // Sum up protein if multiple items found (e.g. "2 eggs and toast")
+                pendingProtein = data.reduce((sum, item) => sum + item.protein_g, 0);
+                pendingName = query;
+                
+                document.getElementById('found-text').innerHTML = `<b>Found:</b> ${query}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g`;
+                document.getElementById('result-info').style.display = 'block';
+            } else {
+                alert("Couldn't find that food. Try being more specific!");
+            }
+        } catch (e) {
+            alert("Error connecting to database.");
         }
+        btn.innerText = "Identify & Add";
     }
 
-    function saveToVault() {
-        const name = document.getElementById('food-name').value;
-        const dens = document.getElementById('density').value;
-        const unit = document.getElementById('unit').value;
-        if(name && dens) {
-            vault.push({name, amount: 1, unit, density: parseFloat(dens)});
-            updateUI();
-        }
-    }
-
-    function renderVault() {
-        const list = document.getElementById('vault-list');
-        list.innerHTML = '';
-        vault.forEach((item, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'vault-btn';
-            btn.innerText = `+ ${item.name}`;
-            btn.onclick = () => {
-                total += item.density;
-                history.unshift({name: item.name, protein: item.density, time: "Quick Log"});
-                updateUI();
-            };
-            list.appendChild(btn);
-        });
+    function confirmAdd() {
+        total += pendingProtein;
+        history.unshift({name: pendingName, protein: pendingProtein.toFixed(1), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+        document.getElementById('result-info').style.display = 'none';
+        document.getElementById('magic-input').value = '';
+        updateUI();
     }
 
     function renderHistory() {
-        const log = document.getElementById('history-log');
-        log.innerHTML = history.map(i => `
+        document.getElementById('history-log').innerHTML = history.map(i => `
             <div class="history-item">
-                <span>${i.name} (${i.time})</span>
+                <span>${i.name}</span>
                 <b>+${i.protein}g</b>
             </div>
         `).join('');
     }
 
-    function resetDay() { if(confirm("Reset everything?")) { total = 0; history = []; updateUI(); } }
+    function resetDay() { if(confirm("Reset?")) { total = 0; history = []; updateUI(); } }
 
     updateUI();
 </script>
