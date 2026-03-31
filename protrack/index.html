@@ -3,86 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack Pro 7.1</title>
+    <title>ProTrack Journal</title>
     <style>
         :root { --pixel-blue: #4285F4; --pixel-green: #34A853; --pixel-orange: #f39c12; --bg: #f8f9fa; }
         body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #202124; }
         .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .protein-display { text-align: center; margin-bottom: 10px; }
+        .protein-display { text-align: center; }
         #total-num { font-size: 3.5rem; font-weight: bold; color: var(--pixel-blue); }
         .progress-container { background: #eee; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 10px 0; }
         #progress-bar { background: var(--pixel-blue); height: 100%; width: 0%; transition: width 0.5s; }
-        input, select { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 1rem; box-sizing: border-box; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        input, select { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
         .btn-main { background: var(--pixel-blue); color: white; }
-        .btn-meatloaf { background: var(--pixel-orange); color: white; margin-top: 10px; }
-        .result-box { background: #e8f0fe; padding: 15px; border-radius: 16px; margin-top: 10px; display: none; }
-        .history-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .btn-quick { background: #f1f3f4; color: #202124; border: 1px solid #dadce0; }
+        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .date-header { font-weight: bold; color: #5f6368; margin-top: 15px; font-size: 0.9rem; border-bottom: 2px solid var(--pixel-blue); padding-bottom: 4px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div class="protein-display">
+        <div id="date-label" style="font-weight:bold; color:#5f6368;">Today</div>
         <div id="total-num">0g</div>
-        <p>Goal: 160g</p>
         <div class="progress-container"><div id="progress-bar"></div></div>
     </div>
 </div>
 
 <div class="card">
     <h3>Quick Log</h3>
-    <button class="btn btn-meatloaf" onclick="addPreset('Homemade Meatloaf', 30.4)">+ 1 Slice Meatloaf (30.4g)</button>
-    <button class="btn" style="background:#34A853; color:white; margin-top:10px;" onclick="addPreset('Whey Shake', 25)">+ 1 Whey Shake (25g)</button>
+    <button class="btn" style="background:var(--pixel-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf (30.4g)</button>
+    <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Italian Sausage', 15)">+ Italian Sausage (15g)</button>
+    <button class="btn" style="background:var(--pixel-green); color:white;" onclick="addEntry('Whey Shake', 25)">+ Whey Shake (25g)</button>
 </div>
 
 <div class="card">
-    <h3>Search Database</h3>
+    <h3>Search USDA</h3>
     <input type="text" id="food-input" placeholder="e.g. Chicken breast">
     <select id="portion-size">
-        <option value="1">Standard (100g)</option>
+        <option value="1">100g serving</option>
         <option value="2.45">1 Cup (~245g)</option>
     </select>
-    <button class="btn btn-main" onclick="searchFood()">Search USDA</button>
-    <div id="result-info" class="result-box">
-        <div id="found-text"></div>
-        <button class="btn" style="background:var(--pixel-green); color:white; margin-top:10px;" onclick="confirmAdd()">Add to Day</button>
-    </div>
+    <button class="btn btn-main" onclick="searchUSDA()">Search & Add</button>
 </div>
 
 <div class="card">
-    <h3>History</h3>
-    <div id="history-log"></div>
-    <button class="btn" style="background:#f1f3f4; color:#5f6368; margin-top:15px;" onclick="resetDay()">Clear Day</button>
+    <h3>Journal (Last 7 Days)</h3>
+    <div id="journal-log"></div>
+    <button class="btn" style="margin-top:20px; font-size:0.8rem;" onclick="clearAllData()">Wipe All History</button>
 </div>
 
 <script>
     const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
     const GOAL = 160;
 
-    let total = parseFloat(localStorage.getItem('pro_total_v71')) || 0;
-    let history = JSON.parse(localStorage.getItem('pro_history_v71')) || [];
-    let pendingAmt = 0;
-    let pendingName = "";
+    // Data Structure: { "2026-03-30": [ {name, amt, time}, ... ], "2026-03-29": [...] }
+    let db = JSON.parse(localStorage.getItem('protrack_db')) || {};
+
+    function getTodayKey() { return new Date().toISOString().split('T')[0]; }
 
     function updateUI() {
-        document.getElementById('total-num').innerText = total.toFixed(1) + 'g';
-        const percent = Math.min((total / GOAL) * 100, 100);
-        document.getElementById('progress-bar').style.width = percent + '%';
-        document.getElementById('progress-bar').style.background = total >= GOAL ? '#34A853' : '#4285F4';
-        localStorage.setItem('pro_total_v71', total);
-        localStorage.setItem('pro_history_v71', JSON.stringify(history));
-        renderHistory();
+        const today = getTodayKey();
+        const todaysLogs = db[today] || [];
+        const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
+
+        // Update Big Display
+        document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
+        const percent = Math.min((dayTotal / GOAL) * 100, 100);
+        const bar = document.getElementById('progress-bar');
+        bar.style.width = percent + '%';
+        bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
+
+        renderJournal();
+        localStorage.setItem('protrack_db', JSON.stringify(db));
     }
 
-    // HANDLES YOUR MEATLOAF & SHAKES
-    function addPreset(name, protein) {
-        total += protein;
-        history.unshift({ name, amt: protein.toFixed(1), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+    function addEntry(name, amt) {
+        const today = getTodayKey();
+        if (!db[today]) db[today] = [];
+        
+        db[today].unshift({
+            name: name,
+            amt: parseFloat(amt).toFixed(1),
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        });
         updateUI();
     }
 
-    async function searchFood() {
+    async function searchUSDA() {
         const query = document.getElementById('food-input').value;
         if (!query) return;
         try {
@@ -90,32 +98,41 @@
             const response = await fetch(url);
             const data = await response.json();
             if (data.foods && data.foods.length > 0) {
-                const proteinObj = data.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
-                if (proteinObj) {
+                const protein = data.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
+                if (protein) {
                     const mult = parseFloat(document.getElementById('portion-size').value);
-                    pendingAmt = parseFloat(proteinObj.value) * mult;
-                    pendingName = data.foods[0].description;
-                    document.getElementById('found-text').innerHTML = `<b>${pendingName}</b><br>Protein: ${pendingAmt.toFixed(1)}g`;
-                    document.getElementById('result-info').style.display = 'block';
+                    addEntry(data.foods[0].description, (protein.value * mult));
+                    document.getElementById('food-input').value = '';
                 }
             }
         } catch (e) { alert("Search failed."); }
     }
 
-    function confirmAdd() {
-        total += pendingAmt;
-        history.unshift({ name: pendingName, amt: pendingAmt.toFixed(1), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        document.getElementById('result-info').style.display = 'none';
-        updateUI();
+    function renderJournal() {
+        const log = document.getElementById('journal-log');
+        log.innerHTML = '';
+        
+        // Sort dates descending
+        const dates = Object.keys(db).sort().reverse();
+        
+        dates.forEach(date => {
+            const dayTotal = db[date].reduce((sum, item) => sum + parseFloat(item.amt), 0);
+            const header = document.createElement('div');
+            header.className = 'date-header';
+            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
+            log.appendChild(header);
+
+            db[date].forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'history-item';
+                row.innerHTML = `<span>${item.name} (${item.time})</span><b>+${item.amt}g</b>`;
+                log.appendChild(row);
+            });
+        });
     }
 
-    function renderHistory() {
-        document.getElementById('history-log').innerHTML = history.map(i => `
-            <div class="history-item"><span>${i.name}</span><b>+${i.amt}g</b></div>
-        `).join('');
-    }
+    function clearAllData() { if(confirm("This deletes EVERY day of history. Proceed?")) { db = {}; updateUI(); } }
 
-    function resetDay() { if(confirm("Clear today?")) { total = 0; history = []; updateUI(); } }
     updateUI();
 </script>
 </body>
