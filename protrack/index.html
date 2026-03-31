@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack Journal</title>
+    <title>ProTrack Control</title>
     <style>
-        :root { --pixel-blue: #4285F4; --pixel-green: #34A853; --pixel-orange: #f39c12; --bg: #f8f9fa; }
+        :root { --pixel-blue: #4285F4; --pixel-green: #34A853; --pixel-orange: #f39c12; --bg: #f8f9fa; --pixel-red: #ea4335; }
         body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #202124; }
         .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .protein-display { text-align: center; }
-        #total-num { font-size: 3.5rem; font-weight: bold; color: var(--pixel-blue); }
+        #total-num { font-size: 3.5rem; font-weight: bold; color: var(--pixel-blue); margin: 0; }
         .progress-container { background: #eee; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 10px 0; }
         #progress-bar { background: var(--pixel-blue); height: 100%; width: 0%; transition: width 0.5s; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         input, select { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
         .btn-main { background: var(--pixel-blue); color: white; }
-        .btn-quick { background: #f1f3f4; color: #202124; border: 1px solid #dadce0; }
-        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .btn-confirm { background: var(--pixel-green); color: white; margin-top: 10px; }
+        
+        .result-box { background: #e8f0fe; padding: 15px; border-radius: 16px; margin-top: 10px; display: none; border: 1px solid #d2e3fc; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .del-btn { color: var(--pixel-red); font-weight: bold; padding: 5px 10px; cursor: pointer; border: 1px solid #eee; border-radius: 8px; margin-left: 10px; font-size: 0.8rem; }
         .date-header { font-weight: bold; color: #5f6368; margin-top: 15px; font-size: 0.9rem; border-bottom: 2px solid var(--pixel-blue); padding-bottom: 4px; }
     </style>
 </head>
@@ -24,142 +30,150 @@
 
 <div class="card">
     <div class="protein-display">
-        <div id="date-label" style="font-weight:bold; color:#5f6368; text-transform: uppercase; letter-spacing: 1px;">Today</div>
-        <div id="total-num">0g</div>
+        <div id="date-label" style="font-weight:bold; color:#5f6368; text-transform: uppercase;">Today</div>
+        <p id="total-num">0g</p>
         <div style="color: #5f6368; font-size: 0.9rem; margin-top: -5px; margin-bottom: 10px;">Goal: 160g</div>
-        
         <div class="progress-container"><div id="progress-bar"></div></div>
     </div>
 </div>
 
 <div class="card">
-    <h3>Quick Log</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <h3 style="margin-top:0;">Quick Log</h3>
+    <div class="grid">
         <button class="btn" style="background:var(--pixel-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf (30.4g)</button>
-        <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Italian Sausage', 15)">+ Sausage (15g)</button>
-        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Large Egg', 6.3)">+ 1 Egg (6.3g)</button>
-        <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna (104g)', 24.5)">+ Tuna Can (24.5g)</button>
-        <button class="btn" style="background:var(--pixel-green); color:white;" onclick="addEntry('Whey Shake', 25)">+ Whey Shake (25g)</button>
-        <button class="btn" style="background:#27ae60; color:white;" onclick="addEntry('Chicken (150g)', 46)">+ Chicken (46g)</button>
+        <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Sausage', 15)">+ Sausage (15g)</button>
+        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Egg', 6.3)">+ 1 Egg (6.3g)</button>
+        <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna Can', 24.5)">+ Tuna (24.5g)</button>
     </div>
 </div>
 
 <div class="card">
-    <h3>Search USDA</h3>
-    <input type="text" id="food-input" placeholder="e.g. Chicken breast">
+    <h3 style="margin-top:0;">Search Database</h3>
+    <input type="text" id="food-input" placeholder="e.g. Oxtail">
     <select id="portion-size">
         <option value="1">100g serving</option>
         <option value="2.45">1 Cup (~245g)</option>
     </select>
-    <button class="btn btn-main" onclick="searchUSDA()">Search & Add</button>
+    <button class="btn btn-main" id="search-btn" onclick="searchUSDA()">Check Protein Info</button>
+    
+    <div id="result-info" class="result-box">
+        <div id="found-text"></div>
+        <button class="btn btn-confirm" onclick="confirmSearchAdd()">Yes, Add to Today</button>
+        <button class="btn" style="background:none; color:#666; margin-top:5px;" onclick="cancelSearch()">Cancel</button>
+    </div>
 </div>
 
 <div class="card">
-    <h3>Journal (Last 7 Days)</h3>
+    <h3 style="margin-top:0;">Journal</h3>
     <div id="journal-log"></div>
-    <button class="btn" style="margin-top:20px; font-size:0.8rem;" onclick="clearAllData()">Wipe All History</button>
 </div>
 
 <script>
     const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
     const GOAL = 160;
 
-    // Load Database
     let db = JSON.parse(localStorage.getItem('protrack_db')) || {};
+    let pendingAmt = 0;
+    let pendingName = "";
 
-    // Improved Date Key (Ensures it uses Local Time accurately)
     function getTodayKey() { 
         const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`; 
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
     }
 
     function updateUI() {
         const today = getTodayKey();
-        
-        // Ensure today exists in the database
-        if (!db[today]) db[today] = [];
-        
-        const todaysLogs = db[today];
-        
-        // CALCULATE: Sum only today's entries
-        let dayTotal = 0;
-        todaysLogs.forEach(item => {
-            dayTotal += parseFloat(item.amt);
-        });
+        const todaysLogs = db[today] || [];
+        const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
 
-        // Update Big Number (Should be 0 if you haven't eaten today!)
         document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
         document.getElementById('date-label').innerText = "TODAY (" + today + ")";
         
-        // Update Progress Bar
         const percent = Math.min((dayTotal / GOAL) * 100, 100);
         const bar = document.getElementById('progress-bar');
         bar.style.width = percent + '%';
         bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
 
-        // Save
         localStorage.setItem('protrack_db', JSON.stringify(db));
         renderJournal();
     }
 
-    function addEntry(name, amt) {
-        const today = getTodayKey();
-        if (!db[today]) db[today] = [];
-        
-        db[today].unshift({
-            name: name,
-            amt: parseFloat(amt).toFixed(1),
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
-        updateUI();
-    }
-
     async function searchUSDA() {
         const query = document.getElementById('food-input').value;
+        const btn = document.getElementById('search-btn');
         if (!query) return;
+
+        btn.innerText = "🔍 Checking...";
+        
         try {
             const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
             const response = await fetch(url);
             const data = await response.json();
+            
             if (data.foods && data.foods.length > 0) {
-                const protein = data.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
+                const food = data.foods[0];
+                const protein = food.foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
+                
                 if (protein) {
                     const mult = parseFloat(document.getElementById('portion-size').value);
-                    addEntry(data.foods[0].description, (protein.value * mult));
-                    document.getElementById('food-input').value = '';
+                    pendingAmt = (protein.value * mult);
+                    pendingName = food.description;
+
+                    document.getElementById('found-text').innerHTML = 
+                        `<b>Preview:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
+                    document.getElementById('result-info').style.display = 'block';
                 }
-            }
-        } catch (e) { alert("Search failed."); }
+            } else { alert("No results found."); }
+        } catch (e) { alert("Error connecting to USDA."); }
+        finally { btn.innerText = "Check Protein Info"; }
+    }
+
+    function confirmSearchAdd() {
+        addEntry(pendingName, pendingAmt);
+        document.getElementById('result-info').style.display = 'none';
+        document.getElementById('food-input').value = '';
+    }
+
+    function cancelSearch() { document.getElementById('result-info').style.display = 'none'; }
+
+    function addEntry(name, amt) {
+        const today = getTodayKey();
+        if (!db[today]) db[today] = [];
+        db[today].unshift({ id: Date.now(), name, amt: parseFloat(amt).toFixed(1), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+        updateUI();
+    }
+
+    function deleteEntry(date, id) {
+        if (confirm("Delete this entry?")) {
+            db[date] = db[date].filter(item => item.id !== id);
+            updateUI();
+        }
     }
 
     function renderJournal() {
         const log = document.getElementById('journal-log');
         log.innerHTML = '';
-        
-        // Sort dates: Newest on top
         const dates = Object.keys(db).sort().reverse();
-        const today = getTodayKey();
         
         dates.forEach(date => {
             const dayTotal = db[date].reduce((sum, item) => sum + parseFloat(item.amt), 0);
             const header = document.createElement('div');
             header.className = 'date-header';
-            header.innerHTML = `<span>${date === today ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
+            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
             log.appendChild(header);
 
             db[date].forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'history-item';
-                row.innerHTML = `<span>${item.name} (${item.time})</span><b>+${item.amt}g</b>`;
+                row.innerHTML = `
+                    <div style="flex-grow:1;">${item.name} <span style="color:#888; font-size:0.7rem;">(${item.time})</span></div>
+                    <div style="font-weight:bold;">+${item.amt}g</div>
+                    <div class="del-btn" onclick="deleteEntry('${date}', ${item.id})">X</div>
+                `;
                 log.appendChild(row);
             });
         });
     }
-
-    function clearAllData() { if(confirm("Clear ALL history?")) { db = {}; updateUI(); } }
 
     updateUI();
 </script>
