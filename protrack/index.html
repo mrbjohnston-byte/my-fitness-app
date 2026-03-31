@@ -65,20 +65,26 @@
     function getTodayKey() { return new Date().toISOString().split('T')[0]; }
 
     function updateUI() {
-        const today = getTodayKey();
-        const todaysLogs = db[today] || [];
-        const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
+    const today = getTodayKey();
+    const todaysLogs = db[today] || [];
+    
+    // STRICTLY calculate only today's protein for the big number
+    const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
 
-        // Update Big Display
-        document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
-        const percent = Math.min((dayTotal / GOAL) * 100, 100);
-        const bar = document.getElementById('progress-bar');
-        bar.style.width = percent + '%';
-        bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
+    // Update Big Display
+    document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
+    document.getElementById('date-label').innerText = "TODAY (" + today + ")";
+    
+    // Update Progress Bar based on today only
+    const percent = Math.min((dayTotal / GOAL) * 100, 100);
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = percent + '%';
+    bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
 
-        renderJournal();
-        localStorage.setItem('protrack_db', JSON.stringify(db));
-    }
+    // Save and Refresh Journal
+    localStorage.setItem('protrack_db', JSON.stringify(db));
+    renderJournal();
+}
 
     function addEntry(name, amt) {
         const today = getTodayKey();
