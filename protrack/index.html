@@ -34,9 +34,14 @@
 
 <div class="card">
     <h3>Quick Log</h3>
-    <button class="btn" style="background:var(--pixel-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf (30.4g)</button>
-    <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Italian Sausage', 15)">+ Italian Sausage (15g)</button>
-    <button class="btn" style="background:var(--pixel-green); color:white;" onclick="addEntry('Whey Shake', 25)">+ Whey Shake (25g)</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="btn" style="background:var(--pixel-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf (30.4g)</button>
+        <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Italian Sausage', 15)">+ Sausage (15g)</button>
+        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Large Egg', 6.3)">+ 1 Egg (6.3g)</button>
+        <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna (104g)', 24.5)">+ Tuna Can (24.5g)</button>
+        <button class="btn" style="background:var(--pixel-green); color:white;" onclick="addEntry('Whey Shake', 25)">+ Whey Shake (25g)</button>
+        <button class="btn" style="background:#27ae60; color:white;" onclick="addEntry('Chicken (150g)', 46)">+ Chicken (46g)</button>
+    </div>
 </div>
 
 <div class="card">
