@@ -53,46 +53,52 @@
     }
 
     async function searchCNF() {
-        const query = document.getElementById('food-input').value;
-        const btn = document.getElementById('search-btn');
-        if (!query) return;
+    const query = document.getElementById('food-input').value.trim();
+    const btn = document.getElementById('search-btn');
+    if (!query) return;
 
-        btn.innerText = "Searching Health Canada...";
+    btn.innerText = "Searching Health Canada...";
+    document.getElementById('result-info').style.display = 'none';
+    
+    try {
+        // Fetch the full food list from Health Canada
+        const searchUrl = `https://food-nutrition.canada.ca/api/canadian-nutrient-file/food/?lang=en&type=json`;
+        const response = await fetch(searchUrl);
+        const allFoods = await response.json();
         
-        try {
-            // Step 1: Search for the food name
-            const searchUrl = `https://food-nutrition.canada.ca/api/canadian-nutrient-file/food/?lang=en&type=json`;
-            const response = await fetch(searchUrl);
-            const allFoods = await response.json();
+        // Find ALL foods that contain the search term
+        const matches = allFoods.filter(f => 
+            f.food_description.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (matches.length > 0) {
+            // Sort by shortest description to find the "base" food (e.g., "Yogurt" vs "Yogurt, fruit, low fat")
+            const match = matches.sort((a, b) => a.food_description.length - b.food_description.length)[0];
             
-            // Filter the massive list for your query locally (more reliable than their search endpoint)
-            const match = allFoods.find(f => f.food_description.toLowerCase().includes(query.toLowerCase()));
+            // Get Protein (Nutrient 203)
+            const nutrientUrl = `https://food-nutrition.canada.ca/api/canadian-nutrient-file/nutrientamount/?id=${match.food_code}&lang=en&type=json`;
+            const nutrientResponse = await fetch(nutrientUrl);
+            const nutrients = await nutrientResponse.json();
             
-            if (match) {
-                // Step 2: Get the protein amount (Nutrient ID 203 is Protein in CNF)
-                const nutrientUrl = `https://food-nutrition.canada.ca/api/canadian-nutrient-file/nutrientamount/?id=${match.food_code}&lang=en&type=json`;
-                const nutrientResponse = await fetch(nutrientUrl);
-                const nutrients = await nutrientResponse.json();
+            const protein = nutrients.find(n => n.nutrient_name_id === 203);
+            
+            if (protein) {
+                pendingProtein = protein.nutrient_value; 
+                pendingName = match.food_description;
                 
-                const protein = nutrients.find(n => n.nutrient_name_id === 203);
-                
-                if (protein) {
-                    pendingProtein = protein.nutrient_value; // Per 100g
-                    pendingName = match.food_description;
-                    
-                    document.getElementById('found-text').innerHTML = 
-                        `<b>Found:</b> ${pendingName}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g per 100g`;
-                    document.getElementById('result-info').style.display = 'block';
-                }
-            } else {
-                alert("Food not found in Canadian database. Try something like 'Beef' or 'Yogurt'.");
+                document.getElementById('found-text').innerHTML = 
+                    `<b>Matched:</b> ${pendingName}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g per 100g`;
+                document.getElementById('result-info').style.display = 'block';
             }
-        } catch (e) {
-            alert("Connection Error: " + e.message);
-        } finally {
-            btn.innerText = "Search Health Canada";
+        } else {
+            alert("No Canadian match for '" + query + "'. Try 'Beef' or 'Egg'.");
         }
+    } catch (e) {
+        alert("CNF Connection Error: " + e.message);
+    } finally {
+        btn.innerText = "Search Health Canada";
     }
+}
 
     function confirmAdd() {
         total += pendingProtein;
