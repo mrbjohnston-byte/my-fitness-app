@@ -69,28 +69,29 @@
             headers: { 'X-Api-Key': API_KEY }
         });
 
-        if (!response.ok) throw new Error("Server Error: " + response.status);
-
         const data = await response.json();
         
         if (data && data.length > 0) {
-            // Calculate total protein and ensure it's a number
             let totalP = 0;
+            // Loop through each item and ensure it's a valid number
             data.forEach(item => {
-                totalP += (item.protein_g || 0);
+                let p = parseFloat(item.protein_g);
+                if (!isNaN(p)) {
+                    totalP += p;
+                }
             });
             
             pendingProtein = totalP;
             pendingName = query;
             
-            // Fixed the .toFixed error by ensuring pendingProtein is treated as a number
-            const displayProtein = Number(pendingProtein).toFixed(1);
+            // Format the display carefully
+            const displayProtein = parseFloat(pendingProtein).toFixed(1);
             
             document.getElementById('found-text').innerHTML = 
                 `<b>Found:</b> ${query}<br><b>Protein:</b> ${displayProtein}g`;
             document.getElementById('result-info').style.display = 'block';
         } else {
-            alert("Food not found. Try being more specific!");
+            alert("No data found for that entry.");
         }
     } catch (e) {
         alert("Error: " + e.message);
