@@ -99,34 +99,45 @@
     }
 
     async function searchUSDA() {
-        const query = document.getElementById('food-input').value;
-        const btn = document.getElementById('search-btn');
-        if (!query) return;
+    const query = document.getElementById('food-input').value;
+    const btn = document.getElementById('search-btn');
+    if (!query) return;
 
-        btn.innerText = "🔍 Checking...";
+    btn.innerText = "🔍 Checking...";
+    document.getElementById('result-info').style.display = 'none';
+    
+    try {
+        const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
+        const response = await fetch(url);
+        const data = await response.json();
         
-        try {
-            const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
-            const response = await fetch(url);
-            const data = await response.json();
+        if (data.foods && data.foods.length > 0) {
+            const food = data.foods[0];
             
-            if (data.foods && data.foods.length > 0) {
-                const food = data.foods[0];
-                const protein = food.foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
-                
-                if (protein) {
-                    const mult = parseFloat(document.getElementById('portion-size').value);
-                    pendingAmt = (protein.value * mult);
-                    pendingName = food.description;
+            // IMPROVED: Look for any nutrient that contains "Protein" or ID 1003
+            const protein = food.foodNutrients.find(n => 
+                n.nutrientId === 1003 || 
+                n.nutrientName.toLowerCase().includes('protein')
+            );
+            
+            if (protein) {
+                const mult = parseFloat(document.getElementById('portion-size').value);
+                pendingAmt = (protein.value * mult);
+                pendingName = food.description;
 
-                    document.getElementById('found-text').innerHTML = 
-                        `<b>Preview:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
-                    document.getElementById('result-info').style.display = 'block';
-                }
-            } else { alert("No results found."); }
-        } catch (e) { alert("Error connecting to USDA."); }
-        finally { btn.innerText = "Check Protein Info"; }
+                document.getElementById('found-text').innerHTML = 
+                    `<b>Preview:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
+                document.getElementById('result-info').style.display = 'block';
+            } else {
+                alert("Found the food, but no protein data listed for this specific entry. Try 'Lentils, cooked'.");
+            }
+        } else { alert("No results found for '" + query + "'"); }
+    } catch (e) { 
+        console.error(e);
+        alert("Error connecting to USDA database."); 
     }
+    finally { btn.innerText = "Check Protein Info"; }
+}
 
     function confirmSearchAdd() {
         addEntry(pendingName, pendingAmt);
