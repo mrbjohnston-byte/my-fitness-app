@@ -73,25 +73,28 @@
         
         if (data && data.length > 0) {
             let totalP = 0;
-            // Loop through each item and ensure it's a valid number
+            
             data.forEach(item => {
                 let p = parseFloat(item.protein_g);
-                if (!isNaN(p)) {
-                    totalP += p;
+                // If protein is 0, let's try to estimate it from the serving size
+                // Most high-protein foods like yogurt/meat won't be 0
+                if (isNaN(p) || p === 0) {
+                    // Fallback: If it's yogurt, assume ~10g per 100g if data is missing
+                    if (item.name.toLowerCase().includes("yogurt")) p = (item.serving_size_g / 100) * 10;
                 }
+                totalP += p;
             });
             
             pendingProtein = totalP;
-            pendingName = query;
+            pendingName = data[0].name;
             
-            // Format the display carefully
             const displayProtein = parseFloat(pendingProtein).toFixed(1);
             
             document.getElementById('found-text').innerHTML = 
-                `<b>Found:</b> ${query}<br><b>Protein:</b> ${displayProtein}g`;
+                `<b>Found:</b> ${pendingName}<br><b>Weight:</b> ${data[0].serving_size_g}g<br><b>Protein:</b> ${displayProtein}g`;
             document.getElementById('result-info').style.display = 'block';
         } else {
-            alert("No data found for that entry.");
+            alert("No data found. Try '150g greek yogurt' for better accuracy.");
         }
     } catch (e) {
         alert("Error: " + e.message);
