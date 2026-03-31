@@ -63,38 +63,37 @@
     btn.innerText = "Searching...";
     document.getElementById('result-info').style.display = 'none';
     
-    // URL encode the query (essential for things like "1 cup yogurt")
-    const encodedQuery = encodeURIComponent(query);
-    
     try {
-        const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${encodedQuery}`, {
+        const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`, {
             method: 'GET',
-            headers: { 
-                'X-Api-Key': API_KEY,
-                'Content-Type': 'application/json'
-            }
+            headers: { 'X-Api-Key': API_KEY }
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server responded with ${response.status}: ${errorText}`);
-        }
+        if (!response.ok) throw new Error("Server Error: " + response.status);
 
         const data = await response.json();
         
         if (data && data.length > 0) {
-            pendingProtein = data.reduce((sum, item) => sum + item.protein_g, 0);
-            pendingName = data[0].name; // Use the official name found
+            // Calculate total protein and ensure it's a number
+            let totalP = 0;
+            data.forEach(item => {
+                totalP += (item.protein_g || 0);
+            });
+            
+            pendingProtein = totalP;
+            pendingName = query;
+            
+            // Fixed the .toFixed error by ensuring pendingProtein is treated as a number
+            const displayProtein = Number(pendingProtein).toFixed(1);
             
             document.getElementById('found-text').innerHTML = 
-                `<b>Found:</b> ${pendingName}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g`;
+                `<b>Found:</b> ${query}<br><b>Protein:</b> ${displayProtein}g`;
             document.getElementById('result-info').style.display = 'block';
         } else {
-            alert("Food not found. Try '1 cup yogurt' or '100g chicken'.");
+            alert("Food not found. Try being more specific!");
         }
     } catch (e) {
-        console.error(e);
-        alert("Connection Error: " + e.message);
+        alert("Error: " + e.message);
     } finally {
         btn.innerText = "Identify & Add";
     }
