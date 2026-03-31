@@ -59,32 +59,46 @@
     const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
     const GOAL = 160;
 
-    // Data Structure: { "2026-03-30": [ {name, amt, time}, ... ], "2026-03-29": [...] }
+    // Load Database
     let db = JSON.parse(localStorage.getItem('protrack_db')) || {};
 
-    function getTodayKey() { return new Date().toISOString().split('T')[0]; }
+    // Improved Date Key (Ensures it uses Local Time accurately)
+    function getTodayKey() { 
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; 
+    }
 
     function updateUI() {
-    const today = getTodayKey();
-    const todaysLogs = db[today] || [];
-    
-    // STRICTLY calculate only today's protein for the big number
-    const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
+        const today = getTodayKey();
+        
+        // Ensure today exists in the database
+        if (!db[today]) db[today] = [];
+        
+        const todaysLogs = db[today];
+        
+        // CALCULATE: Sum only today's entries
+        let dayTotal = 0;
+        todaysLogs.forEach(item => {
+            dayTotal += parseFloat(item.amt);
+        });
 
-    // Update Big Display
-    document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
-    document.getElementById('date-label').innerText = "TODAY (" + today + ")";
-    
-    // Update Progress Bar based on today only
-    const percent = Math.min((dayTotal / GOAL) * 100, 100);
-    const bar = document.getElementById('progress-bar');
-    bar.style.width = percent + '%';
-    bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
+        // Update Big Number (Should be 0 if you haven't eaten today!)
+        document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
+        document.getElementById('date-label').innerText = "TODAY (" + today + ")";
+        
+        // Update Progress Bar
+        const percent = Math.min((dayTotal / GOAL) * 100, 100);
+        const bar = document.getElementById('progress-bar');
+        bar.style.width = percent + '%';
+        bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
 
-    // Save and Refresh Journal
-    localStorage.setItem('protrack_db', JSON.stringify(db));
-    renderJournal();
-}
+        // Save
+        localStorage.setItem('protrack_db', JSON.stringify(db));
+        renderJournal();
+    }
 
     function addEntry(name, amt) {
         const today = getTodayKey();
@@ -120,14 +134,15 @@
         const log = document.getElementById('journal-log');
         log.innerHTML = '';
         
-        // Sort dates descending
+        // Sort dates: Newest on top
         const dates = Object.keys(db).sort().reverse();
+        const today = getTodayKey();
         
         dates.forEach(date => {
             const dayTotal = db[date].reduce((sum, item) => sum + parseFloat(item.amt), 0);
             const header = document.createElement('div');
             header.className = 'date-header';
-            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
+            header.innerHTML = `<span>${date === today ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
             log.appendChild(header);
 
             db[date].forEach(item => {
@@ -139,7 +154,7 @@
         });
     }
 
-    function clearAllData() { if(confirm("This deletes EVERY day of history. Proceed?")) { db = {}; updateUI(); } }
+    function clearAllData() { if(confirm("Clear ALL history?")) { db = {}; updateUI(); } }
 
     updateUI();
 </script>
