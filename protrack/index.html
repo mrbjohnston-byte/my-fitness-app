@@ -3,121 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack USDA</title>
+    <title>ProTrack Pro 7</title>
     <style>
-        :root { --pixel-blue: #4285F4; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .protein-main { font-size: 3rem; font-weight: bold; color: var(--pixel-blue); text-align: center; }
-        input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 1.1rem; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-magic { background: var(--pixel-blue); color: white; }
-        .result-box { background: #e8f0fe; padding: 15px; border-radius: 12px; margin-top: 10px; display: none; }
+        :root { --pixel-blue: #4285F4; --pixel-green: #34A853; --pixel-red: #EA4335; --bg: #f8f9fa; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #202124; }
+        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .protein-display { text-align: center; margin-bottom: 10px; }
+        #total-num { font-size: 3.5rem; font-weight: bold; color: var(--pixel-blue); }
+        
+        /* Progress Bar */
+        .progress-container { background: #eee; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 10px 0; }
+        #progress-bar { background: var(--pixel-blue); height: 100%; width: 0%; transition: width 0.5s, background 0.5s; }
+
+        input, select { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; font-size: 1rem; box-sizing: border-box; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+        .btn-main { background: var(--pixel-blue); color: white; }
+        .btn-confirm { background: var(--pixel-green); color: white; margin-top: 10px; }
+        
+        .result-box { background: #e8f0fe; padding: 15px; border-radius: 16px; margin-top: 10px; display: none; border: 1px solid #d2e3fc; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="protein-main" id="total-display">0g</div>
-    <p style="text-align:center; color: #666;">Daily Protein Tracker</p>
+    <div class="protein-display">
+        <div id="total-num">0g</div>
+        <p>Goal: 160g</p>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
 </div>
 
 <div class="card">
-    <h3>Search Food</h3>
-    <input type="text" id="magic-input" placeholder="e.g. Chicken breast or Greek yogurt">
-    <button class="btn btn-magic" id="search-btn" onclick="lookupUSDA()">Search Database</button>
+    <h3>Log Meal</h3>
+    <input type="text" id="food-input" placeholder="e.g. Plain Greek Yogurt">
+    
+    <label style="font-size: 0.8rem; color: #666;">Serving Size:</label>
+    <select id="portion-size">
+        <option value="1">Standard (100g)</option>
+        <option value="2.45">1 Cup (~245g)</option>
+        <option value="0.28">1 Ounce (28g)</option>
+        <option value="1.5">Large Serving (150g)</option>
+    </select>
+
+    <button class="btn btn-main" id="search-btn" onclick="searchFood()">Search USDA</button>
     
     <div id="result-info" class="result-box">
-        <p id="found-text"></p>
-        <button class="btn" style="background:#34A853; color:white;" onclick="confirmAdd()">Add 100g serving</button>
+        <div id="found-text"></div>
+        <button class="btn btn-confirm" onclick="addProtein()">Confirm & Add</button>
     </div>
 </div>
 
 <div class="card">
     <h3>History</h3>
     <div id="history-log"></div>
-    <button class="btn" style="background:#eee; color:#555;" onclick="resetDay()">Reset Day</button>
+    <button class="btn" style="background:#f1f3f4; color:#5f6368; margin-top:10px;" onclick="resetDay()">Clear Day</button>
 </div>
 
 <script>
-    const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; // PASTE YOUR KEY HERE
+    const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
+    const GOAL = 160;
 
-    let total = parseFloat(localStorage.getItem('pro_total')) || 0;
-    let history = JSON.parse(localStorage.getItem('pro_history')) || [];
-    let pendingProtein = 0;
+    let total = parseFloat(localStorage.getItem('pro_total_v7')) || 0;
+    let history = JSON.parse(localStorage.getItem('pro_history_v7')) || [];
+    let pendingAmt = 0;
     let pendingName = "";
 
     function updateUI() {
-        document.getElementById('total-display').innerText = total.toFixed(1) + 'g';
-        localStorage.setItem('pro_total', total);
-        localStorage.setItem('pro_history', JSON.stringify(history));
+        document.getElementById('total-num').innerText = total.toFixed(1) + 'g';
+        
+        // Update Progress Bar
+        const percent = Math.min((total / GOAL) * 100, 100);
+        const bar = document.getElementById('progress-bar');
+        bar.style.width = percent + '%';
+        
+        // Color Change: Blue -> Green when goal hit
+        if (total >= GOAL) bar.style.background = '#34A853';
+        else bar.style.background = '#4285F4';
+
+        localStorage.setItem('pro_total_v7', total);
+        localStorage.setItem('pro_history_v7', JSON.stringify(history));
         renderHistory();
     }
 
-    async function lookupUSDA() {
-        const query = document.getElementById('magic-input').value;
+    async function searchFood() {
+        const query = document.getElementById('food-input').value;
         const btn = document.getElementById('search-btn');
         if (!query) return;
 
-        btn.innerText = "Searching...";
+        btn.innerText = "🔍 Searching...";
         document.getElementById('result-info').style.display = 'none';
 
         try {
-            // We search across all data types (Branded, Foundation, SR Legacy)
             const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
             const response = await fetch(url);
             const data = await response.json();
 
             if (data.foods && data.foods.length > 0) {
                 const food = data.foods[0];
-                
-                // Find protein in the nutrients array
-                // The nutrientName is usually "Protein"
-                const proteinObj = food.foodNutrients.find(n => 
-                    n.nutrientName.toLowerCase() === 'protein' || n.nutrientId === 1003
-                );
+                const proteinObj = food.foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase() === 'protein');
 
                 if (proteinObj) {
-                    pendingProtein = parseFloat(proteinObj.value);
+                    const multiplier = parseFloat(document.getElementById('portion-size').value);
+                    pendingAmt = parseFloat(proteinObj.value) * multiplier;
                     pendingName = food.description;
 
                     document.getElementById('found-text').innerHTML = 
-                        `<b>Found:</b> ${pendingName}<br><b>Protein:</b> ${pendingProtein.toFixed(1)}g (per 100g)`;
+                        `<b>Food:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
                     document.getElementById('result-info').style.display = 'block';
-                } else {
-                    alert("Found the food, but couldn't find protein data.");
                 }
-            } else {
-                alert("No results found. Try 'Chicken breast' or 'Greek yogurt'.");
-            }
-        } catch (e) {
-            alert("Connection Error: " + e.message);
-        } finally {
-            btn.innerText = "Search Database";
-        }
+            } else { alert("No food found. Try being more specific."); }
+        } catch (e) { alert("Error: " + e.message); }
+        finally { btn.innerText = "Search USDA"; }
     }
 
-    function confirmAdd() {
-        total += pendingProtein;
-        history.unshift({
-            name: pendingName, 
-            protein: pendingProtein.toFixed(1), 
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
+    function addProtein() {
+        total += pendingAmt;
+        history.unshift({ name: pendingName, amt: pendingAmt.toFixed(1), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
         document.getElementById('result-info').style.display = 'none';
-        document.getElementById('magic-input').value = '';
+        document.getElementById('food-input').value = '';
         updateUI();
     }
 
     function renderHistory() {
         document.getElementById('history-log').innerHTML = history.map(i => `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-                <span>${i.name} (${i.time})</span><b>+${i.protein}g</b>
+            <div class="history-item">
+                <span>${i.name}</span><b>+${i.amt}g</b>
             </div>
         `).join('');
     }
 
-    function resetDay() { if(confirm("Reset everything?")) { total = 0; history = []; updateUI(); } }
+    function resetDay() { if(confirm("Start a new day?")) { total = 0; history = []; updateUI(); } }
 
     updateUI();
 </script>
