@@ -109,34 +109,40 @@
     try {
         const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
         const response = await fetch(url);
+        
+        if (!response.ok) throw new Error("Server error: " + response.status);
+        
         const data = await response.json();
         
         if (data.foods && data.foods.length > 0) {
             const food = data.foods[0];
             
-            // IMPROVED: Look for any nutrient that contains "Protein" or ID 1003
-            const protein = food.foodNutrients.find(n => 
+            // Look for Protein by ID (1003) or by Name
+            const proteinObj = food.foodNutrients.find(n => 
                 n.nutrientId === 1003 || 
-                n.nutrientName.toLowerCase().includes('protein')
+                (n.nutrientName && n.nutrientName.toLowerCase().includes('protein'))
             );
             
-            if (protein) {
+            if (proteinObj && proteinObj.value !== undefined) {
                 const mult = parseFloat(document.getElementById('portion-size').value);
-                pendingAmt = (protein.value * mult);
+                pendingAmt = (parseFloat(proteinObj.value) * mult);
                 pendingName = food.description;
 
                 document.getElementById('found-text').innerHTML = 
                     `<b>Preview:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
                 document.getElementById('result-info').style.display = 'block';
             } else {
-                alert("Found the food, but no protein data listed for this specific entry. Try 'Lentils, cooked'.");
+                alert("Found: '" + food.description + "' but it has no protein data listed. Try searching 'Lentils, cooked'.");
             }
-        } else { alert("No results found for '" + query + "'"); }
+        } else {
+            alert("No results found in USDA for '" + query + "'. Try a simpler name.");
+        }
     } catch (e) { 
-        console.error(e);
-        alert("Error connecting to USDA database."); 
+        console.error("USDA Error:", e);
+        alert("Connection Error: " + e.message); 
+    } finally { 
+        btn.innerText = "Check Protein Info"; 
     }
-    finally { btn.innerText = "Check Protein Info"; }
 }
 
     function confirmSearchAdd() {
