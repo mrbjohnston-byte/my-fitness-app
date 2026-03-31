@@ -65,7 +65,7 @@
         <div class="card">
             <h2>💊 Daily Supplements</h2>
             <div style="font-size: 0.95rem; line-height: 1.6;">
-                <label style="display:block;"><input type="checkbox"> <b>AM:</b> Aspirin (100mg), Candesartan, Multi</label>
+                <label style="display:block;"><input type="checkbox"> <b>AM:</b> Aspirin (100mg), Candesartan, Multi, Omega-3</label>
                 <label style="display:block;"><input type="checkbox"> <b>Lunch:</b> Creatine (3-5g)</label>
                 <label style="display:block;"><input type="checkbox"> <b>PM:</b> Magnesium Glycinate</label>
             </div>
@@ -73,7 +73,7 @@
     </div>
 
     <div style="text-align:center; font-size:0.6rem; color:#ccc; margin-top:10px;">
-        Version: March 30.1 | <a href="#" onclick="localStorage.clear(); location.reload();" style="color:#ccc;">Clear Cache</a>
+        Version: March 31.1 | <a href="#" onclick="localStorage.clear(); location.reload();" style="color:#ccc;">Clear Cache</a>
     </div>
 
     <div id="modal-overlay" onclick="closeModal()">
@@ -85,7 +85,6 @@
     </div>
 
     <script>
-        // CRASH PROTECTION
         window.onerror = function(msg) {
             const log = document.getElementById('error-log');
             log.style.display = 'block';
@@ -98,29 +97,28 @@
         const recipes = {
             "Lentil salad": "Toss 1.5 cups canned lentils (rinsed) with cucumber, tomatoes, 2 tbsp olive oil, lemon juice, salt, and pepper.",
             "Sardines + quinoa + vegetables": "Heat quinoa, sauté vegetables, add sardines or shrimp. Season with lemon and salt.",
-            "Chickpea bowl": "Mix 1.5 cups chickpeas with chopped vegetables, greens, olive oil, and lemon[cite: 11].",
-            "Chicken + broccoli + sweet potato": "Pan sear chicken, microwave potato, steam broccoli[cite: 22].",
-            "Chicken salad": "Combine cooked chicken with greens, olive oil, and vinegar[cite: 12].",
-            "Cod + greens + brown rice": "Pan sear fish, heat rice, wilt greens[cite: 23].",
-            "White bean soup": "Sauté garlic in olive oil, add white beans and broth, simmer 10 minutes[cite: 13].",
-            "Turkey + mixed vegetables": "Brown ground turkey, add frozen vegetables[cite: 24].",
-            "Egg/sardine salad": "Chop 2 hard boiled eggs, add 1 can sardines, olive oil, pepper, lemon[cite: 14].",
-            "Trout or mackerel + asparagus": "Pan sear fish, sauté or roast asparagus[cite: 25].",
-            "Hummus & veg": "Serve hummus with raw vegetables and olives[cite: 15].",
-            "Lean beef + roasted vegetables": "Sear meat, roast vegetables[cite: 26].",
-            "Leftovers": "Reheat and eat[cite: 19].",
-            "Plant-based lentil/bean stew": "Lentils simmered with broth, garlic, olive oil[cite: 27].",
-            "Greek salad w/ chickpeas": "Tomatoes, cucumber, chickpeas, feta, olive oil, lemon[cite: 16].",
-            "Skinless chicken thighs + vegetables": "Pan sear chicken thighs; sauté or steam seasonal vegetables[cite: 28].",
-            "Lentil soup": "Canned lentils + broth + garlic + olive oil (10-15 min)[cite: 46].",
-            "Haddock/pollock + potatoes": "Pan sear fish, microwave potatoes[cite: 29].",
-            "Sardines on toast": "Sardines on whole grain toast with lemon and pepper[cite: 17].",
-            "Turkey + zucchini + rice": "Sauté ground turkey and zucchini; serve over brown rice[cite: 30].",
-            "Bean & avocado salad": "Mixed beans tossed with diced avocado, olive oil, and lemon[cite: 18].",
-            "Mackerel + Brussels sprouts": "Pan sear mackerel; sauté or roast Brussels sprouts[cite: 25].",
-            "Egg salad": "Chopped hard-boiled eggs with olive oil or yogurt, mustard, and pepper[cite: 19].",
-            "Cod or tilapia + greens": "Simple pan sear of white fish; sauté greens with garlic[cite: 30].",
-            "Plant-based beans, lentils & vegetables": "Warm beans or lentils with olive oil and vegetables[cite: 31]."
+            "Chickpea bowl": "Mix 1.5 cups chickpeas with chopped vegetables, greens, olive oil, and lemon.",
+            "Chicken + broccoli + sweet potato": "Pan sear chicken, microwave potato, steam broccoli.",
+            "Chicken salad": "Combine cooked chicken with greens, olive oil, and vinegar.",
+            "Cod + greens + brown rice": "Pan sear fish, heat rice, wilt greens.",
+            "White bean soup": "Sauté garlic in olive oil, add white beans and broth, simmer 10 minutes.",
+            "Turkey + mixed vegetables": "Brown ground turkey, add frozen vegetables.",
+            "Egg/sardine salad": "Chop 2 hard boiled eggs, add 1 can sardines, olive oil, pepper, lemon.",
+            "Trout or mackerel + asparagus": "Pan sear fish, sauté or roast asparagus.",
+            "Lean beef + roasted vegetables": "Sear meat, roast vegetables.",
+            "Leftovers": "Reheat and eat.",
+            "Plant-based lentil/bean stew": "Lentils simmered with broth, garlic, olive oil.",
+            "Greek salad w/ chickpeas": "Tomatoes, cucumber, chickpeas, feta, olive oil, lemon.",
+            "Skinless chicken thighs + vegetables": "Pan sear chicken thighs; sauté or steam seasonal vegetables.",
+            "Lentil soup": "Canned lentils + broth + garlic + olive oil (10-15 min).",
+            "Haddock/pollock + potatoes": "Pan sear fish, microwave potatoes.",
+            "Sardines on toast": "Sardines on whole grain toast with lemon and pepper.",
+            "Turkey + zucchini + rice": "Sauté ground turkey and zucchini; serve over brown rice.",
+            "Bean & avocado salad": "Mixed beans tossed with diced avocado, olive oil, and lemon.",
+            "Mackerel + Brussels sprouts": "Pan sear mackerel; sauté or roast Brussels sprouts.",
+            "Egg salad": "Chopped hard-boiled eggs with olive oil or yogurt, mustard, and pepper.",
+            "Cod or tilapia + greens": "Simple pan sear of white fish; sauté greens with garlic.",
+            "Plant-based beans, lentils & vegetables": "Warm beans or lentils with olive oil and vegetables."
         };
 
         const workouts = {
@@ -201,16 +199,16 @@
 
         function openRecipe(name) {
             document.getElementById('modal-title').innerText = name;
-            document.getElementById('modal-body').innerText = recipes[name] || "Instructions: Reheat and eat[cite: 19].";
+            document.getElementById('modal-body').innerText = recipes[name] || "Instructions: Reheat and eat.";
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
         function showCheatSheet() {
             document.getElementById('modal-title').innerText = "Cooking Cheat Sheet";
             document.getElementById('modal-body').innerHTML = `
-                <p><b>Acceptable Proteins:</b> Chicken, turkey, eggs, shrimp, cod, tilapia, sardines, mackerel, lentils, chickpeas [cite: 6-8, 38-41].</p>
-                <p><b>Shrimp Guide:</b> 6-8 oz cooked (2-3 min per side) [cite: 32-33, 54-56].</p>
-                <p><b>Flavor:</b> Olive oil, garlic, lemon, salt[cite: 34, 57].</p>`;
+                <p><b>Acceptable Proteins:</b> Chicken, turkey, eggs, shrimp, cod, tilapia, sardines, mackerel, lentils, chickpeas.</p>
+                <p><b>Shrimp Guide:</b> 6-8 oz cooked (2-3 min per side).</p>
+                <p><b>Flavor:</b> Olive oil, garlic, lemon, salt.</p>`;
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
