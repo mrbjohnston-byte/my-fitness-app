@@ -3,78 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack Control</title>
+    <title>ProTrack Flex</title>
     <style>
-        :root { --pixel-blue: #4285F4; --pixel-green: #34A853; --pixel-orange: #f39c12; --bg: #f8f9fa; --pixel-red: #ea4335; }
+        :root { --p-blue: #4285F4; --p-green: #34A853; --p-orange: #f39c12; --p-purple: #8e44ad; --p-red: #ea4335; --bg: #f8f9fa; }
         body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #202124; }
-        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .protein-display { text-align: center; }
-        #total-num { font-size: 3.5rem; font-weight: bold; color: var(--pixel-blue); margin: 0; }
-        .progress-container { background: #eee; border-radius: 10px; height: 12px; width: 100%; overflow: hidden; margin: 10px 0; }
-        #progress-bar { background: var(--pixel-blue); height: 100%; width: 0%; transition: width 0.5s; }
-        
+        .card { background: white; border-radius: 28px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-bottom: 10px; }
+        #total-num { font-size: 3rem; font-weight: bold; color: var(--p-blue); margin: 0; }
+        #remain-num { font-size: 1.2rem; font-weight: 500; color: #5f6368; margin-top: 8px; }
+        .progress-container { background: #e0e0e0; border-radius: 20px; height: 12px; width: 100%; overflow: hidden; margin: 15px 0; }
+        #progress-bar { background: var(--p-blue); height: 100%; width: 0%; transition: width 0.6s; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input, select { width: 100%; padding: 14px; border: 1px solid #dadce0; border-radius: 12px; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
-        
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
-        .btn-main { background: var(--pixel-blue); color: white; }
-        .btn-confirm { background: var(--pixel-green); color: white; margin-top: 10px; }
-        
-        .result-box { background: #e8f0fe; padding: 15px; border-radius: 16px; margin-top: 10px; display: none; border: 1px solid #d2e3fc; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .del-btn { color: var(--pixel-red); font-weight: bold; padding: 5px 10px; cursor: pointer; border: 1px solid #eee; border-radius: 8px; margin-left: 10px; font-size: 0.8rem; }
-        .date-header { font-weight: bold; color: #5f6368; margin-top: 15px; font-size: 0.9rem; border-bottom: 2px solid var(--pixel-blue); padding-bottom: 4px; }
+        input, select { width: 100%; padding: 14px; border: 1px solid #dfe1e5; border-radius: 14px; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 14px; font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.96); }
+        .btn-main { background: var(--p-blue); color: white; }
+        .btn-manual { background: #202124; color: white; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+        .del-btn { color: var(--p-red); padding: 5px 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
+        .date-header { font-weight: 700; color: #5f6368; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="protein-display">
-        <div id="date-label" style="font-weight:bold; color:#5f6368; text-transform: uppercase;">Today</div>
-        <p id="total-num">0g</p>
-        <div style="color: #5f6368; font-size: 0.9rem; margin-top: -5px; margin-bottom: 10px;">Goal: 160g</div>
-        <div class="progress-container"><div id="progress-bar"></div></div>
+    <div id="date-label" style="font-weight:700; color:#5f6368; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase;">Today</div>
+    <div class="stats-grid">
+        <div><div id="total-num">0g</div><div style="font-size:0.7rem; color:#888;">EATEN</div></div>
+        <div><div id="remain-num">160g</div><div style="font-size:0.7rem; color:#888;">REMAINING</div></div>
+    </div>
+    <div class="progress-container"><div id="progress-bar"></div></div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0; font-size:1rem;">Whey Shake Multiplier</h3>
+    <div style="display: flex; gap: 10px;">
+        <select id="shake-scoops" style="flex: 1;">
+            <option value="1">1 Scoop (25g)</option>
+            <option value="1.5" selected>1.5 Scoops (37.5g)</option>
+            <option value="2">2 Scoops (50g)</option>
+        </select>
+        <button class="btn" style="background:var(--p-green); color:white; flex: 1;" onclick="logShake()">Log Shake</button>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0;">Quick Log</h3>
+    <h3 style="margin-top:0; font-size:1rem;">Quick Log</h3>
     <div class="grid">
-        <button class="btn" style="background:var(--pixel-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf (30.4g)</button>
-        <button class="btn" style="background:#8e44ad; color:white;" onclick="addEntry('Sausage', 15)">+ Sausage (15g)</button>
-        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Egg', 6.3)">+ 1 Egg (6.3g)</button>
-        <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna Can', 24.5)">+ Tuna (24.5g)</button>
+        <button class="btn" style="background:var(--p-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf</button>
+        <button class="btn" style="background:var(--p-purple); color:white;" onclick="addEntry('Sausage', 15)">+ Sausage</button>
+        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Egg', 6.3)">+ 1 Egg</button>
+        <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna Can', 24.5)">+ Tuna</button>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0;">Search Database</h3>
-    <input type="text" id="food-input" placeholder="e.g. Oxtail">
+    <h3 style="margin-top:0; font-size:1rem;">Manual Entry</h3>
+    <div style="display: flex; gap: 8px;">
+        <input type="number" id="manual-amt" placeholder="Grams" style="flex: 1;">
+        <input type="text" id="manual-name" placeholder="Food name" style="flex: 2;">
+    </div>
+    <button class="btn btn-manual" onclick="manualAdd()">Add Custom Protein</button>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0; font-size:1rem;">Search USDA</h3>
+    <input type="text" id="food-input" placeholder="Search any food...">
     <select id="portion-size">
         <option value="1">100g serving</option>
-        <option value="2.45">1 Cup (~245g)</option>
+        <option value="2.45">1 Cup portion</option>
     </select>
     <button class="btn btn-main" id="search-btn" onclick="searchUSDA()">Check Protein Info</button>
-    
-    <div id="result-info" class="result-box">
+    <div id="result-info" style="background:#e8f0fe; padding:15px; border-radius:15px; margin-top:10px; display:none; text-align:center;">
         <div id="found-text"></div>
-        <button class="btn btn-confirm" onclick="confirmSearchAdd()">Yes, Add to Today</button>
-        <button class="btn" style="background:none; color:#666; margin-top:5px;" onclick="cancelSearch()">Cancel</button>
+        <button class="btn" style="background:var(--p-green); color:white; margin-top:10px;" onclick="confirmSearchAdd()">Log Entry</button>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0;">Journal</h3>
+    <h3 style="margin-top:0; font-size:1rem;">Journal</h3>
     <div id="journal-log"></div>
 </div>
 
 <script>
     const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
     const GOAL = 160;
-
     let db = JSON.parse(localStorage.getItem('protrack_db')) || {};
-    let pendingAmt = 0;
-    let pendingName = "";
+    let pendingAmt = 0; let pendingName = "";
 
     function getTodayKey() { 
         const d = new Date();
@@ -85,73 +100,32 @@
         const today = getTodayKey();
         const todaysLogs = db[today] || [];
         const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
-
         document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
-        document.getElementById('date-label').innerText = "TODAY (" + today + ")";
-        
+        document.getElementById('remain-num').innerText = Math.max(GOAL - dayTotal, 0).toFixed(1) + 'g';
+        document.getElementById('date-label').innerText = "Today · " + new Date().toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
         const percent = Math.min((dayTotal / GOAL) * 100, 100);
         const bar = document.getElementById('progress-bar');
         bar.style.width = percent + '%';
         bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
-
         localStorage.setItem('protrack_db', JSON.stringify(db));
         renderJournal();
     }
 
-    async function searchUSDA() {
-    const query = document.getElementById('food-input').value;
-    const btn = document.getElementById('search-btn');
-    if (!query) return;
+    function logShake() {
+        const scoops = parseFloat(document.getElementById('shake-scoops').value);
+        const protein = 25 * scoops;
+        addEntry(`Whey Shake (${scoops} scoops)`, protein);
+    }
 
-    btn.innerText = "🔍 Checking...";
-    document.getElementById('result-info').style.display = 'none';
-    
-    try {
-        const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
-        const response = await fetch(url);
-        
-        if (!response.ok) throw new Error("Server error: " + response.status);
-        
-        const data = await response.json();
-        
-        if (data.foods && data.foods.length > 0) {
-            const food = data.foods[0];
-            
-            // Look for Protein by ID (1003) or by Name
-            const proteinObj = food.foodNutrients.find(n => 
-                n.nutrientId === 1003 || 
-                (n.nutrientName && n.nutrientName.toLowerCase().includes('protein'))
-            );
-            
-            if (proteinObj && proteinObj.value !== undefined) {
-                const mult = parseFloat(document.getElementById('portion-size').value);
-                pendingAmt = (parseFloat(proteinObj.value) * mult);
-                pendingName = food.description;
-
-                document.getElementById('found-text').innerHTML = 
-                    `<b>Preview:</b> ${pendingName}<br><b>Protein:</b> ${pendingAmt.toFixed(1)}g`;
-                document.getElementById('result-info').style.display = 'block';
-            } else {
-                alert("Found: '" + food.description + "' but it has no protein data listed. Try searching 'Lentils, cooked'.");
-            }
-        } else {
-            alert("No results found in USDA for '" + query + "'. Try a simpler name.");
+    function manualAdd() {
+        const amt = document.getElementById('manual-amt').value;
+        const name = document.getElementById('manual-name').value || "Manual Entry";
+        if (amt) {
+            addEntry(name, amt);
+            document.getElementById('manual-amt').value = '';
+            document.getElementById('manual-name').value = '';
         }
-    } catch (e) { 
-        console.error("USDA Error:", e);
-        alert("Connection Error: " + e.message); 
-    } finally { 
-        btn.innerText = "Check Protein Info"; 
     }
-}
-
-    function confirmSearchAdd() {
-        addEntry(pendingName, pendingAmt);
-        document.getElementById('result-info').style.display = 'none';
-        document.getElementById('food-input').value = '';
-    }
-
-    function cancelSearch() { document.getElementById('result-info').style.display = 'none'; }
 
     function addEntry(name, amt) {
         const today = getTodayKey();
@@ -160,8 +134,36 @@
         updateUI();
     }
 
+    async function searchUSDA() {
+        const query = document.getElementById('food-input').value;
+        if (!query) return;
+        document.getElementById('search-btn').innerText = "🔍 Checking...";
+        try {
+            const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.foods && data.foods.length > 0) {
+                const protein = data.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase().includes('protein'));
+                if (protein) {
+                    const mult = parseFloat(document.getElementById('portion-size').value);
+                    pendingAmt = protein.value * mult;
+                    pendingName = data.foods[0].description;
+                    document.getElementById('found-text').innerHTML = `<b>${pendingName}</b><br>${pendingAmt.toFixed(1)}g Protein`;
+                    document.getElementById('result-info').style.display = 'block';
+                }
+            }
+        } catch (e) { alert("Search Error"); }
+        finally { document.getElementById('search-btn').innerText = "Check Protein Info"; }
+    }
+
+    function confirmSearchAdd() {
+        addEntry(pendingName, pendingAmt);
+        document.getElementById('result-info').style.display = 'none';
+        document.getElementById('food-input').value = '';
+    }
+
     function deleteEntry(date, id) {
-        if (confirm("Delete this entry?")) {
+        if (confirm("Remove entry?")) {
             db[date] = db[date].filter(item => item.id !== id);
             updateUI();
         }
@@ -171,27 +173,20 @@
         const log = document.getElementById('journal-log');
         log.innerHTML = '';
         const dates = Object.keys(db).sort().reverse();
-        
         dates.forEach(date => {
             const dayTotal = db[date].reduce((sum, item) => sum + parseFloat(item.amt), 0);
             const header = document.createElement('div');
             header.className = 'date-header';
-            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span style="float:right">${dayTotal.toFixed(1)}g</span>`;
+            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span>${dayTotal.toFixed(1)}g</span>`;
             log.appendChild(header);
-
             db[date].forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'history-item';
-                row.innerHTML = `
-                    <div style="flex-grow:1;">${item.name} <span style="color:#888; font-size:0.7rem;">(${item.time})</span></div>
-                    <div style="font-weight:bold;">+${item.amt}g</div>
-                    <div class="del-btn" onclick="deleteEntry('${date}', ${item.id})">X</div>
-                `;
+                row.innerHTML = `<div>${item.name} <div style="color:#888; font-size:0.7rem;">${item.time}</div></div><div style="font-weight:bold; display:flex; align-items:center;">+${item.amt}g <span class="del-btn" onclick="deleteEntry('${date}', ${item.id})">×</span></div>`;
                 log.appendChild(row);
             });
         });
     }
-
     updateUI();
 </script>
 </body>
