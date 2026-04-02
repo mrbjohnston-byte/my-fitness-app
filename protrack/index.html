@@ -3,36 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProTrack Ultimate</title>
+    <title>ProTrack Calendar</title>
     <style>
         :root { --p-blue: #4285F4; --p-green: #34A853; --p-orange: #f39c12; --p-purple: #8e44ad; --p-red: #ea4335; --bg: #f8f9fa; }
         body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #202124; }
         .card { background: white; border-radius: 28px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
         
-        /* Stats Header (From Beta 11) */
+        /* Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; text-align: center; margin-bottom: 10px; }
         #total-num { font-size: 3rem; font-weight: bold; color: var(--p-blue); margin: 0; }
         #remain-num { font-size: 1.2rem; font-weight: 500; color: #5f6368; margin-top: 8px; }
-        
         .progress-container { background: #e0e0e0; border-radius: 20px; height: 12px; width: 100%; overflow: hidden; margin: 15px 0; }
         #progress-bar { background: var(--p-blue); height: 100%; width: 0%; transition: width 0.6s; }
         
+        /* Calendar UI */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 2px solid transparent; }
+        .cal-day.today { border-color: var(--p-blue); }
+        .cal-day.goal-met { background: var(--p-green); color: white; }
+        .cal-day.goal-miss { background: var(--p-orange); color: white; }
+        .cal-day.empty { background: #f1f3f4; color: #dadce0; }
+        .cal-day.selected { transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.2); z-index: 2; }
+        
+        /* Controls */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         input, select { width: 100%; padding: 14px; border: 1px solid #dfe1e5; border-radius: 14px; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 14px; font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.96); }
         .btn-main { background: var(--p-blue); color: white; }
         .btn-manual { background: #202124; color: white; }
         
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
-        .del-btn { color: var(--p-red); padding: 5px 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
-        .date-header { font-weight: 700; color: #5f6368; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; font-size: 0.9rem; }
+        /* History Detail */
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f3f4; }
+        .del-btn { color: var(--p-red); padding: 5px 10px; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="date-label" style="font-weight:700; color:#5f6368; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase;">Today</div>
+    <div id="date-label" style="font-weight:700; color:#5f6368; font-size: 0.75rem; text-transform: uppercase;">Today</div>
     <div class="stats-grid">
         <div><div id="total-num">0g</div><div style="font-size:0.7rem; color:#888;">EATEN</div></div>
         <div><div id="remain-num">160.0g</div><div style="font-size:0.7rem; color:#888;">REMAINING</div></div>
@@ -41,63 +49,56 @@
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0; font-size:1rem;">Whey Shake Multiplier</h3>
-    <div style="display: flex; gap: 10px;">
-        <select id="shake-scoops" style="flex: 1.5;">
+    <h3 style="margin-top:0; font-size:1rem;">Quick Log</h3>
+    <div style="display: flex; gap: 10px; margin-bottom:10px;">
+        <select id="shake-scoops" style="flex: 1.5; margin-bottom:0;">
             <option value="1">1 Scoop (25g)</option>
             <option value="1.5" selected>1.5 Scoops (37.5g)</option>
             <option value="2">2 Scoops (50g)</option>
         </select>
         <button class="btn" style="background:var(--p-green); color:white; flex: 1;" onclick="logShake()">Log Shake</button>
     </div>
-</div>
-
-<div class="card">
-    <h3 style="margin-top:0; font-size:1rem;">Quick Log</h3>
     <div class="grid">
-        <button class="btn" style="background:var(--p-orange); color:white;" onclick="addEntry('Meatloaf Slice', 30.4)">+ Meatloaf</button>
+        <button class="btn" style="background:var(--p-orange); color:white;" onclick="addEntry('Meatloaf', 30.4)">+ Meatloaf</button>
         <button class="btn" style="background:var(--p-purple); color:white;" onclick="addEntry('Sausage', 15)">+ Sausage</button>
-        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Large Egg', 6.3)">+ 1 Egg</button>
+        <button class="btn" style="background:#f39c12; color:white;" onclick="addEntry('Egg', 6.3)">+ 1 Egg</button>
         <button class="btn" style="background:#2980b9; color:white;" onclick="addEntry('Tuna Can', 24.5)">+ Tuna</button>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0; font-size:1rem;">Manual Entry</h3>
+    <h3 style="margin-top:0; font-size:1rem;">Manual / Search</h3>
     <div style="display: flex; gap: 8px;">
         <input type="number" id="manual-amt" placeholder="Grams" style="flex: 1;">
         <input type="text" id="manual-name" placeholder="Food name" style="flex: 2;">
     </div>
-    <button class="btn btn-manual" onclick="manualAdd()">Add Custom Protein</button>
-</div>
-
-<div class="card">
-    <h3 style="margin-top:0; font-size:1rem;">Search USDA</h3>
-    <input type="text" id="food-input" placeholder="Search any food...">
-    <select id="portion-size">
-        <option value="1">100g serving</option>
-        <option value="2.45">1 Cup portion</option>
-        <option value="1.5">1.5 Cups (Recipe)</option>
-    </select>
-    <button class="btn btn-main" id="search-btn" onclick="searchUSDA()">Check Protein Info</button>
+    <button class="btn btn-manual" style="margin-bottom:15px;" onclick="manualAdd()">Add Custom</button>
     
-    <div id="result-info" style="background:#e8f0fe; padding:18px; border-radius:20px; margin-top:10px; display:none; text-align:center; border: 1px solid #d2e3fc;">
-        <div id="found-text" style="font-size: 1.1rem; margin-bottom: 10px;"></div>
-        <button class="btn" style="background:var(--p-green); color:white;" onclick="confirmSearchAdd()">Log Entry</button>
-        <button class="btn" style="background:none; color:#5f6368; font-size: 0.85rem; margin-top: 5px; text-decoration: underline;" onclick="cancelSearch()">Cancel Search</button>
+    <input type="text" id="food-input" placeholder="Search USDA...">
+    <button class="btn btn-main" id="search-btn" onclick="searchUSDA()">Search Protein</button>
+    
+    <div id="result-info" style="background:#e8f0fe; padding:15px; border-radius:20px; margin-top:10px; display:none; text-align:center;">
+        <div id="found-text"></div>
+        <button class="btn" style="background:var(--p-green); color:white; margin-top:10px;" onclick="confirmSearchAdd()">Log Entry</button>
+        <button class="btn" style="background:none; color:#5f6368; font-size: 0.8rem;" onclick="cancelSearch()">Cancel</button>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0; font-size:1rem;">Journal</h3>
-    <div id="journal-log"></div>
+    <h3 style="margin-top:0; font-size:1rem;" id="cal-title">April 2026</h3>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    
+    <div id="day-detail" style="margin-top:20px;">
+        <div id="selected-date-title" style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">Select a day</div>
+        <div id="selected-day-history"></div>
+    </div>
 </div>
 
 <script>
     const API_KEY = 'GYd5z87uP8FNk06ehccHtccbwmPWhBjKWPA2POIY'; 
     const GOAL = 160;
     let db = JSON.parse(localStorage.getItem('protrack_db')) || {};
-    let pendingAmt = 0; let pendingName = "";
+    let selectedDate = getTodayKey();
 
     function getTodayKey() { 
         const d = new Date();
@@ -108,87 +109,113 @@
         const today = getTodayKey();
         const todaysLogs = db[today] || [];
         const dayTotal = todaysLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
-        const remain = Math.max(GOAL - dayTotal, 0);
-
+        
         document.getElementById('total-num').innerText = dayTotal.toFixed(1) + 'g';
-        document.getElementById('remain-num').innerText = remain.toFixed(1) + 'g';
-        document.getElementById('date-label').innerText = "Today · " + new Date().toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+        document.getElementById('remain-num').innerText = Math.max(GOAL - dayTotal, 0).toFixed(1) + 'g';
         
         const percent = Math.min((dayTotal / GOAL) * 100, 100);
         const bar = document.getElementById('progress-bar');
         bar.style.width = percent + '%';
-        bar.style.background = dayTotal >= GOAL ? '#34A853' : '#4285F4';
-        
+        bar.style.background = dayTotal >= GOAL ? '--p-green' : '--p-blue';
+
         localStorage.setItem('protrack_db', JSON.stringify(db));
-        renderJournal();
+        renderCalendar();
+        showDayDetail(selectedDate);
     }
 
-    function logShake() {
-        const scoops = parseFloat(document.getElementById('shake-scoops').value);
-        addEntry(`Whey Shake (${scoops} scoops)`, 25 * scoops);
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        
+        // Month Title
+        document.getElementById('cal-title').innerText = now.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const dayLogs = db[dateKey] || [];
+            const dayTotal = dayLogs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
+            
+            const dayEl = document.createElement('div');
+            dayEl.className = 'cal-day';
+            dayEl.innerText = i;
+            
+            if (dateKey === getTodayKey()) dayEl.classList.add('today');
+            if (dateKey === selectedDate) dayEl.classList.add('selected');
+            
+            if (dayTotal >= GOAL) dayEl.classList.add('goal-met');
+            else if (dayTotal > 0) dayEl.classList.add('goal-miss');
+            else dayEl.classList.add('empty');
+            
+            dayEl.onclick = () => {
+                selectedDate = dateKey;
+                updateUI();
+            };
+            grid.appendChild(dayEl);
+        }
     }
 
-    function manualAdd() {
-        const amt = document.getElementById('manual-amt').value;
-        const name = document.getElementById('manual-name').value || "Manual Entry";
-        if (amt) { addEntry(name, amt); document.getElementById('manual-amt').value = ''; document.getElementById('manual-name').value = ''; }
+    function showDayDetail(dateKey) {
+        const title = document.getElementById('selected-date-title');
+        const historyDiv = document.getElementById('selected-day-history');
+        const logs = db[dateKey] || [];
+        const total = logs.reduce((sum, item) => sum + parseFloat(item.amt), 0);
+        
+        title.innerHTML = `<span>${dateKey === getTodayKey() ? 'TODAY' : dateKey}</span> <span style="float:right">${total.toFixed(1)}g</span>`;
+        
+        historyDiv.innerHTML = logs.length ? '' : '<div style="color:#aaa; font-size:0.8rem; padding:10px;">No entries for this day.</div>';
+        logs.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'history-item';
+            row.innerHTML = `<div>${item.name} <div style="color:#888; font-size:0.7rem;">${item.time}</div></div>
+                             <div style="font-weight:bold; display:flex; align-items:center;">+${item.amt}g 
+                             <span class="del-btn" onclick="deleteEntry('${dateKey}', ${item.id})">×</span></div>`;
+            historyDiv.appendChild(row);
+        });
     }
 
-    function cancelSearch() { document.getElementById('result-info').style.display = 'none'; document.getElementById('food-input').value = ''; }
-
+    /* Logic Functions (Existing) */
     function addEntry(name, amt) {
         const today = getTodayKey();
         if (!db[today]) db[today] = [];
         db[today].unshift({ id: Date.now(), name, amt: parseFloat(amt).toFixed(1), time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+        selectedDate = today; 
         updateUI();
     }
-
+    
+    function logShake() { const s = document.getElementById('shake-scoops').value; addEntry(`Shake (${s} scp)`, 25 * s); }
+    function manualAdd() { 
+        const a = document.getElementById('manual-amt').value; 
+        const n = document.getElementById('manual-name').value || "Custom";
+        if(a) { addEntry(n, a); document.getElementById('manual-amt').value=''; document.getElementById('manual-name').value=''; }
+    }
+    function deleteEntry(date, id) { if(confirm("Remove?")) { db[date] = db[date].filter(i => i.id !== id); updateUI(); } }
+    
+    // USDA Search (Existing)
     async function searchUSDA() {
-        const query = document.getElementById('food-input').value;
-        if (!query) return;
-        document.getElementById('search-btn').innerText = "🔍 Checking...";
+        const q = document.getElementById('food-input').value; if(!q) return;
+        document.getElementById('search-btn').innerText = "🔍...";
         try {
-            const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=1`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.foods && data.foods.length > 0) {
-                const protein = data.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase().includes('protein'));
-                if (protein) {
-                    const mult = parseFloat(document.getElementById('portion-size').value);
-                    pendingAmt = protein.value * mult;
-                    pendingName = data.foods[0].description;
-                    document.getElementById('found-text').innerHTML = `<b>${pendingName}</b><br>${pendingAmt.toFixed(1)}g Protein`;
-                    document.getElementById('result-info').style.display = 'block';
+            const r = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(q)}&pageSize=1`);
+            const d = await r.json();
+            if(d.foods?.length) {
+                const p = d.foods[0].foodNutrients.find(n => n.nutrientId === 1003 || n.nutrientName.toLowerCase().includes('protein'));
+                if(p) {
+                    pendingAmt = p.value; pendingName = d.foods[0].description;
+                    document.getElementById('found-text').innerHTML = `<b>${pendingName}</b><br>${pendingAmt}g Protein`;
+                    document.getElementById('result-info').style.display='block';
                 }
             }
-        } catch (e) { alert("Search Error"); }
-        finally { document.getElementById('search-btn').innerText = "Check Protein Info"; }
+        } catch(e) { alert("Error"); }
+        finally { document.getElementById('search-btn').innerText = "Search Protein"; }
     }
-
     function confirmSearchAdd() { addEntry(pendingName, pendingAmt); cancelSearch(); }
+    function cancelSearch() { document.getElementById('result-info').style.display='none'; document.getElementById('food-input').value=''; }
 
-    function deleteEntry(date, id) {
-        if (confirm("Remove entry?")) { db[date] = db[date].filter(item => item.id !== id); updateUI(); }
-    }
-
-    function renderJournal() {
-        const log = document.getElementById('journal-log');
-        log.innerHTML = '';
-        const dates = Object.keys(db).sort().reverse();
-        dates.forEach(date => {
-            const dayTotal = db[date].reduce((sum, item) => sum + parseFloat(item.amt), 0);
-            const header = document.createElement('div');
-            header.className = 'date-header';
-            header.innerHTML = `<span>${date === getTodayKey() ? 'TODAY' : date}</span> <span>${dayTotal.toFixed(1)}g</span>`;
-            log.appendChild(header);
-            db[date].forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'history-item';
-                row.innerHTML = `<div>${item.name} <div style="color:#888; font-size:0.7rem;">${item.time}</div></div><div style="font-weight:bold; display:flex; align-items:center;">+${item.amt}g <span class="del-btn" onclick="deleteEntry('${date}', ${item.id})">×</span></div>`;
-                log.appendChild(row);
-            });
-        });
-    }
     updateUI();
 </script>
 </body>
